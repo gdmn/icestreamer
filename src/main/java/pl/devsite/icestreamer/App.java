@@ -318,7 +318,6 @@ public class App {
 			logger.log(Level.FINE, "Response code {1}, body length {0}", new Object[]{urlResponse.body.length(), urlResponse.status});
 			return VERSION.equals(urlResponse.body);
 		} catch (Exception ex) {
-			logger.log(Level.SEVERE, null, ex);
 		}
 		return false;
 	}
