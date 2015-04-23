@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import spark.Response;
 
 /**
@@ -12,6 +14,7 @@ import spark.Response;
  */
 public class RenderMpeg implements Render {
 
+	private static final Logger logger = Logger.getLogger(RenderMpeg.class.getName());
 	private final Item item;
 	private final Response response;
 
@@ -46,6 +49,7 @@ public class RenderMpeg implements Render {
 
 	@Override
 	public void send() throws IOException {
+		logger.log(Level.INFO, "Requested {0}", item.toString());
 		response.type("audio/mpeg");
 		response.header("icy-metaint", "" + CHUNK_SIZE);
 		

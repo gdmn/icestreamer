@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import spark.Request;
 import spark.Response;
@@ -15,6 +17,7 @@ import static spark.Spark.*;
 
 public class App {
 
+	private static final Logger logger = Logger.getLogger(App.class.getName());
 	Items allItems = new Items();
 	int defaultPort = 0;
 	String defaultName = "localhost";
@@ -77,6 +80,18 @@ public class App {
 			return null;
 		});
 
+		get("/clear", (request, response) -> {
+			allItems.clear();
+			response.redirect("/status");
+			return null;
+		});
+
+		get("/clean", (request, response) -> {
+			allItems.clean();
+			response.redirect("/status");
+			return null;
+		});
+
 		get("/list", (request, response) -> {
 			String host = queriedHost(request);
 			String filter = queriedSearch(request);
@@ -97,7 +112,7 @@ public class App {
 
 			String body = request.body();
 			Items result = serve(body);
-			System.out.println("Size: " + allItems.items.size());
+			logger.log(Level.INFO, "Size {0}", allItems.items.size());
 			return render(response, request.queryParams("format"), result.getList(), host);
 		});
 	}
@@ -230,10 +245,10 @@ public class App {
 			try {
 				ServerSocket socket = new ServerSocket(number);
 				socket.close();
-				System.out.println("Serving on " + socket.getLocalPort());
+				logger.log(Level.INFO, "Serving on {0}", socket.getLocalPort());
 				return socket.getLocalPort();
 			} catch (IOException ex) {
-				System.out.println("Port " + number + " seems busy");
+				logger.log(Level.WARNING, "Port {0} seems busy", number);
 			}
 			number++;
 		} while (true);

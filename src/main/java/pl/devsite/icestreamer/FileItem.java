@@ -99,4 +99,9 @@ class FileItem implements Item {
 		return this.toString().compareTo(o.toString());
 	}
 
+	@Override
+	public boolean exists() {
+		return new File(canonicalPath).exists();
+	}
+
 }

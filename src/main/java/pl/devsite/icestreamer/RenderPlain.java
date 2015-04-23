@@ -3,6 +3,7 @@ package pl.devsite.icestreamer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import spark.Response;
 
@@ -31,6 +32,7 @@ public class RenderPlain implements Render {
 
 	@Override
 	public void send() throws IOException {
+		logger.log(Level.INFO, "Requested {0}", item.toString());
 		response.type("application/octet-stream");
 		if (item instanceof FileItem) {
 			FileItem fileItem = (FileItem) item;

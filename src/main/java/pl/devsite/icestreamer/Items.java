@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 class Items {
 
@@ -19,10 +20,17 @@ class Items {
 		}
 	}
 
+	public void feed(Item... things) {
+		for (Item thing : things) {
+			fed.add(thing);
+			items.put(thing.hashCode(), thing);
+		}
+	}
+
 	public void merge(Items mergeWith) {
 		items.putAll(mergeWith.items);
 	}
-	
+
 	public List<Item> getList() {
 		return fed;
 	}
@@ -33,6 +41,18 @@ class Items {
 
 	public Item get(Integer key) {
 		return items.get(key);
+	}
+
+	public void clear() {
+		items.clear();
+	}
+
+	public void clean() {
+		Map<Integer, Item> map = items.entrySet()
+				.parallelStream()
+				.filter(e -> e.getValue().exists())
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		items = map;
 	}
 
 }

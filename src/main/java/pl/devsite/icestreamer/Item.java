@@ -20,4 +20,6 @@ interface Item extends Comparable<Item> {
 	String getName();
 	
 	boolean matches(Pattern pattern);
+	
+	boolean exists();
 }
