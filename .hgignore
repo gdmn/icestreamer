@@ -1,0 +1,9 @@
+syntax: glob
+
+*~
+*.class
+*.jar
+*.swp
+*conflicted copy*
+target/*
+nbactions.xml
