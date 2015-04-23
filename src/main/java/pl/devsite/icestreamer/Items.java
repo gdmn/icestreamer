@@ -15,8 +15,10 @@ class Items {
 	public void feed(String... things) {
 		for (String thing : things) {
 			Item i = factory.create(thing);
-			fed.add(i);
-			items.put(i.hashCode(), i);
+			if (i != null) {
+				fed.add(i);
+				items.put(i.hashCode(), i);
+			}
 		}
 	}
 

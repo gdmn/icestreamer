@@ -21,6 +21,7 @@ public class App {
 	Items allItems = new Items();
 	int defaultPort = 0;
 	String defaultName = "localhost";
+	private static final String VERSION = "iceserver-api-1.0";
 
 	void run() {
 		port(defaultPort);
@@ -33,6 +34,11 @@ public class App {
 		get("/status", (request, response) -> {
 			response.type("text/plain");
 			return status(request, response);
+		});
+
+		get("/version", (request, response) -> {
+			response.type("text/plain");
+			return VERSION;
 		});
 
 		get("/stream/:hashcode", (request, response) -> {
@@ -144,6 +150,10 @@ public class App {
 
 	void init(String[] args) throws IOException {
 		int i = 0;
+		defaultPort = 0;
+		boolean isThereServerAlready = false;
+		boolean isPortBusy;
+
 		while (i < args.length) {
 			if ("-p".equalsIgnoreCase(args[i]) || "--port".equalsIgnoreCase(args[i])) {
 				String pString = args[++i];
@@ -154,20 +164,71 @@ public class App {
 			}
 			i++;
 		}
+
 		if (defaultPort == 0) {
 			defaultPort = findFreePort();
+			isPortBusy = false;
+		} else {
+			isPortBusy = isPortBusy(defaultPort);
+			isThereServerAlready = isThereServer(defaultPort);
 		}
 
-		Thread t = new Thread(() -> {
-			Scanner sc = new Scanner(System.in);
-			while (sc.hasNextLine()) {
-				String line = sc.nextLine();
-				System.out.print(renderList(serve(line).getList(), defaultName + ":" + defaultPort));
-				System.out.flush();
+		int bytesAvailable = -1;
+		try {
+			bytesAvailable = System.in.available();
+			logger.log(Level.FINE, "System.in.available(): {0}", bytesAvailable);
+		} catch (IOException ex) {
+			Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+		}
+
+		if (bytesAvailable > -1) {
+			Thread t = new Thread(() -> {
+				Scanner sc = new Scanner(System.in);
+				while (sc.hasNextLine()) {
+					String line = sc.nextLine();
+					logger.log(Level.FINE, "System.in: {0}", line);
+					try {
+						System.out.print(renderList(serve(line).getList(), defaultName + ":" + defaultPort));
+					} catch (Exception e) {
+						logger.log(Level.WARNING, null, e);
+					}
+					System.out.flush();
+				}
+				logger.log(Level.INFO, "System.in exhausted");
+			});
+
+			if (!isThereServerAlready && isPortBusy) {
+				logger.log(Level.SEVERE, "Port is not free but there is not compatibile icestreamer running");
+				System.exit(1);
 			}
-		});
-		t.setDaemon(true);
-		t.start();
+			
+			if (!isThereServerAlready) {
+				logger.log(Level.INFO, "Reading System.in in daemon mode");
+				t.setDaemon(true);
+				t.start();
+			} else {
+				logger.log(Level.INFO, "Reading System.in and passing data to the server");
+
+				Scanner sc = new Scanner(System.in);
+				StringBuilder lines = new StringBuilder();
+				while (sc.hasNextLine()) {
+					String line = sc.nextLine();
+					lines.append(line).append("\n");
+				}
+				logger.log(Level.INFO, "System.in exhausted");
+				SparkTestUtil util = new SparkTestUtil(defaultPort);
+				SparkTestUtil.UrlResponse urlResponse;
+				try {
+					urlResponse = util.doMethod("POST", "/", lines.toString());
+					logger.log(Level.INFO, "Response code {1}, body length {0}", new Object[]{urlResponse.body.length(), urlResponse.status});
+					System.out.println(urlResponse.body);
+				} catch (Exception ex) {
+					logger.log(Level.SEVERE, null, ex);
+				}
+
+				System.exit(0);
+			}
+		}
 	}
 
 	boolean isIcy(Request request) {
@@ -237,6 +298,29 @@ public class App {
 	}
 
 	App() {
+	}
+
+	private boolean isPortBusy(int number) {
+		try {
+			ServerSocket socket = new ServerSocket(number);
+			socket.close();
+			return false;
+		} catch (IOException ex) {
+		}
+		return true;
+	}
+
+	private boolean isThereServer(int defaultPort) {
+		SparkTestUtil util = new SparkTestUtil(defaultPort);
+		SparkTestUtil.UrlResponse urlResponse;
+		try {
+			urlResponse = util.doMethod("GET", "/version", null);
+			logger.log(Level.FINE, "Response code {1}, body length {0}", new Object[]{urlResponse.body.length(), urlResponse.status});
+			return VERSION.equals(urlResponse.body);
+		} catch (Exception ex) {
+			logger.log(Level.SEVERE, null, ex);
+		}
+		return false;
 	}
 
 	private int findFreePort() {
