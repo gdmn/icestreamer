@@ -5,7 +5,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
-
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
@@ -31,157 +30,137 @@ import org.apache.http.util.EntityUtils;
 
 public class SparkTestUtil {
 
-    private int port;
+	private int port;
 
-    private HttpClient httpClient;
+	private HttpClient httpClient;
 
-    public SparkTestUtil(int port) {
-        this.port = port;
-        Scheme http = new Scheme("http", port, PlainSocketFactory.getSocketFactory());
-        SchemeRegistry sr = new SchemeRegistry();
-        sr.register(http);
-        ClientConnectionManager connMrg = new BasicClientConnectionManager(sr);
-        this.httpClient = new DefaultHttpClient(connMrg);
-    }
+	public SparkTestUtil(int port) {
+		this.port = port;
+		Scheme http = new Scheme("http", port, PlainSocketFactory.getSocketFactory());
+		SchemeRegistry sr = new SchemeRegistry();
+		sr.register(http);
+		ClientConnectionManager connMrg = new BasicClientConnectionManager(sr);
+		this.httpClient = new DefaultHttpClient(connMrg);
+	}
 
-    public UrlResponse doMethodSecure(String requestMethod, String path, String body)
-            throws Exception {
-        return doMethod(requestMethod, path, body, true, "text/html");
-    }
+	public UrlResponse doMethod(String requestMethod, String path, String body) throws Exception {
+		return doMethod(requestMethod, path, body, "text/html");
+	}
 
-    public UrlResponse doMethod(String requestMethod, String path, String body) throws Exception {
-        return doMethod(requestMethod, path, body, false, "text/html");
-    }
+	private UrlResponse doMethod(String requestMethod, String path, String body,
+			String acceptType) throws Exception {
+		return doMethod(requestMethod, path, body, acceptType, null);
+	}
 
-    public UrlResponse doMethodSecure(String requestMethod, String path, String body, String acceptType)
-            throws Exception {
-        return doMethod(requestMethod, path, body, true, acceptType);
-    }
+	public UrlResponse doMethod(String requestMethod, String path, String body,
+			String acceptType, Map<String, String> reqHeaders) throws IOException {
+		HttpUriRequest httpRequest = getHttpRequest(requestMethod, path, body, acceptType, reqHeaders);
+		HttpResponse httpResponse = httpClient.execute(httpRequest);
 
-    public UrlResponse doMethod(String requestMethod, String path, String body, String acceptType) throws Exception {
-        return doMethod(requestMethod, path, body, false, acceptType);
-    }
+		UrlResponse urlResponse = new UrlResponse();
+		urlResponse.status = httpResponse.getStatusLine().getStatusCode();
+		HttpEntity entity = httpResponse.getEntity();
+		if (entity != null) {
+			urlResponse.body = EntityUtils.toString(entity);
+		} else {
+			urlResponse.body = "";
+		}
+		Map<String, String> headers = new HashMap<String, String>();
+		Header[] allHeaders = httpResponse.getAllHeaders();
+		for (Header header : allHeaders) {
+			headers.put(header.getName(), header.getValue());
+		}
+		urlResponse.headers = headers;
+		return urlResponse;
+	}
 
-    private UrlResponse doMethod(String requestMethod, String path, String body, boolean secureConnection,
-                                 String acceptType) throws Exception {
-        return doMethod(requestMethod, path, body, secureConnection, acceptType, null);
-    }
+	private HttpUriRequest getHttpRequest(String requestMethod, String path, String body,
+			String acceptType, Map<String, String> reqHeaders) {
+		String uri = "http" + "://localhost:" + port + path;
 
-    public UrlResponse doMethod(String requestMethod, String path, String body, boolean secureConnection,
-                                String acceptType, Map<String, String> reqHeaders) throws IOException {
-        HttpUriRequest httpRequest = getHttpRequest(requestMethod, path, body, secureConnection, acceptType, reqHeaders);
-        HttpResponse httpResponse = httpClient.execute(httpRequest);
+		if (requestMethod.equals("GET")) {
+			HttpGet httpGet = new HttpGet(uri);
+			httpGet.setHeader("Accept", acceptType);
+			addHeaders(reqHeaders, httpGet);
+			return httpGet;
+		}
 
-        UrlResponse urlResponse = new UrlResponse();
-        urlResponse.status = httpResponse.getStatusLine().getStatusCode();
-        HttpEntity entity = httpResponse.getEntity();
-        if (entity != null) {
-            urlResponse.body = EntityUtils.toString(entity);
-        } else {
-            urlResponse.body = "";
-        }
-        Map<String, String> headers = new HashMap<String, String>();
-        Header[] allHeaders = httpResponse.getAllHeaders();
-        for (Header header : allHeaders) {
-            headers.put(header.getName(), header.getValue());
-        }
-        urlResponse.headers = headers;
-        return urlResponse;
-    }
+		if (requestMethod.equals("POST")) {
+			HttpPost httpPost = new HttpPost(uri);
+			httpPost.setHeader("Accept", acceptType);
+			addHeaders(reqHeaders, httpPost);
+			httpPost.setEntity(new StringEntity(body, "UTF-8"));
+			return httpPost;
+		}
 
-    private HttpUriRequest getHttpRequest(String requestMethod, String path, String body, boolean secureConnection,
-                                          String acceptType, Map<String, String> reqHeaders) {
-        try {
-            String protocol = secureConnection ? "https" : "http";
-            String uri = protocol + "://localhost:" + port + path;
+		if (requestMethod.equals("PATCH")) {
+			HttpPatch httpPatch = new HttpPatch(uri);
+			httpPatch.setHeader("Accept", acceptType);
+			addHeaders(reqHeaders, httpPatch);
+			httpPatch.setEntity(new StringEntity(body, "UTF-8"));
+			return httpPatch;
+		}
 
-            if (requestMethod.equals("GET")) {
-                HttpGet httpGet = new HttpGet(uri);
-                httpGet.setHeader("Accept", acceptType);
-                addHeaders(reqHeaders, httpGet);
-                return httpGet;
-            }
+		if (requestMethod.equals("DELETE")) {
+			HttpDelete httpDelete = new HttpDelete(uri);
+			addHeaders(reqHeaders, httpDelete);
+			httpDelete.setHeader("Accept", acceptType);
+			return httpDelete;
+		}
 
-            if (requestMethod.equals("POST")) {
-                HttpPost httpPost = new HttpPost(uri);
-                httpPost.setHeader("Accept", acceptType);
-                addHeaders(reqHeaders, httpPost);
-                httpPost.setEntity(new StringEntity(body));
-                return httpPost;
-            }
+		if (requestMethod.equals("PUT")) {
+			HttpPut httpPut = new HttpPut(uri);
+			httpPut.setHeader("Accept", acceptType);
+			addHeaders(reqHeaders, httpPut);
+			httpPut.setEntity(new StringEntity(body, "UTF-8"));
+			return httpPut;
+		}
 
-            if (requestMethod.equals("PATCH")) {
-                HttpPatch httpPatch = new HttpPatch(uri);
-                httpPatch.setHeader("Accept", acceptType);
-                addHeaders(reqHeaders, httpPatch);
-                httpPatch.setEntity(new StringEntity(body));
-                return httpPatch;
-            }
+		if (requestMethod.equals("HEAD")) {
+			HttpHead httpHead = new HttpHead(uri);
+			addHeaders(reqHeaders, httpHead);
+			return httpHead;
+		}
 
-            if (requestMethod.equals("DELETE")) {
-                HttpDelete httpDelete = new HttpDelete(uri);
-                addHeaders(reqHeaders, httpDelete);
-                httpDelete.setHeader("Accept", acceptType);
-                return httpDelete;
-            }
+		if (requestMethod.equals("TRACE")) {
+			HttpTrace httpTrace = new HttpTrace(uri);
+			addHeaders(reqHeaders, httpTrace);
+			return httpTrace;
+		}
 
-            if (requestMethod.equals("PUT")) {
-                HttpPut httpPut = new HttpPut(uri);
-                httpPut.setHeader("Accept", acceptType);
-                addHeaders(reqHeaders, httpPut);
-                httpPut.setEntity(new StringEntity(body));
-                return httpPut;
-            }
+		if (requestMethod.equals("OPTIONS")) {
+			HttpOptions httpOptions = new HttpOptions(uri);
+			addHeaders(reqHeaders, httpOptions);
+			return httpOptions;
+		}
 
-            if (requestMethod.equals("HEAD")) {
-                HttpHead httpHead = new HttpHead(uri);
-                addHeaders(reqHeaders, httpHead);
-                return httpHead;
-            }
+		throw new IllegalArgumentException("Unknown method " + requestMethod);
+	}
 
-            if (requestMethod.equals("TRACE")) {
-                HttpTrace httpTrace = new HttpTrace(uri);
-                addHeaders(reqHeaders, httpTrace);
-                return httpTrace;
-            }
+	private void addHeaders(Map<String, String> reqHeaders, HttpRequest req) {
+		if (reqHeaders != null) {
+			for (Map.Entry<String, String> header : reqHeaders.entrySet()) {
+				req.addHeader(header.getKey(), header.getValue());
+			}
+		}
+	}
 
-            if (requestMethod.equals("OPTIONS")) {
-                HttpOptions httpOptions = new HttpOptions(uri);
-                addHeaders(reqHeaders, httpOptions);
-                return httpOptions;
-            }
+	public int getPort() {
+		return port;
+	}
 
-            throw new IllegalArgumentException("Unknown method " + requestMethod);
+	public static class UrlResponse {
 
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-    }
+		public Map<String, String> headers;
+		public String body;
+		public int status;
+	}
 
-    private void addHeaders(Map<String, String> reqHeaders, HttpRequest req) {
-        if (reqHeaders != null) {
-            for (Map.Entry<String, String> header : reqHeaders.entrySet()) {
-                req.addHeader(header.getKey(), header.getValue());
-            }
-        }
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public static class UrlResponse {
-
-        public Map<String, String> headers;
-        public String body;
-        public int status;
-    }
-
-    public static void sleep(long time) {
-        try {
-            Thread.sleep(time);
-        } catch (Exception e) {
-        }
-    }
+	public static void sleep(long time) {
+		try {
+			Thread.sleep(time);
+		} catch (Exception e) {
+		}
+	}
 
 }

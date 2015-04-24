@@ -181,6 +181,10 @@ public class App {
 			Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
+		if (bytesAvailable == 0 && (isThereServerAlready || isPortBusy)) {
+			logger.log(Level.SEVERE, "Port is not free but there is no input (System.in)");
+			System.exit(1);
+		}
 		if (bytesAvailable > -1) {
 			Thread t = new Thread(() -> {
 				Scanner sc = new Scanner(System.in);
@@ -201,7 +205,7 @@ public class App {
 				logger.log(Level.SEVERE, "Port is not free but there is not compatibile icestreamer running");
 				System.exit(1);
 			}
-			
+
 			if (!isThereServerAlready) {
 				logger.log(Level.INFO, "Reading System.in in daemon mode");
 				t.setDaemon(true);
@@ -316,8 +320,10 @@ public class App {
 		try {
 			urlResponse = util.doMethod("GET", "/version", null);
 			logger.log(Level.FINE, "Response code {1}, body length {0}", new Object[]{urlResponse.body.length(), urlResponse.status});
+			logger.log(Level.INFO, "{0} == {1} = {2}", new Object[]{VERSION, urlResponse.body, VERSION.equals(urlResponse.body)});
 			return VERSION.equals(urlResponse.body);
 		} catch (Exception ex) {
+			logger.log(Level.INFO, "Request failed: {0}", ex.getMessage());
 		}
 		return false;
 	}
