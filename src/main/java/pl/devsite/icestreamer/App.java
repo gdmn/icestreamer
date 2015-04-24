@@ -181,10 +181,6 @@ public class App {
 			Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
-		if (bytesAvailable == 0 && (isThereServerAlready || isPortBusy)) {
-			logger.log(Level.SEVERE, "Port is not free but there is no input (System.in)");
-			System.exit(1);
-		}
 		if (bytesAvailable > -1) {
 			Thread t = new Thread(() -> {
 				Scanner sc = new Scanner(System.in);
@@ -215,11 +211,13 @@ public class App {
 
 				Scanner sc = new Scanner(System.in);
 				StringBuilder lines = new StringBuilder();
+				int lineCounter = 0;
 				while (sc.hasNextLine()) {
 					String line = sc.nextLine();
 					lines.append(line).append("\n");
+					lineCounter++;
 				}
-				logger.log(Level.INFO, "System.in exhausted");
+				logger.log(Level.INFO, "System.in exhausted, {0} line(s) read", lineCounter);
 				SparkTestUtil util = new SparkTestUtil(defaultPort);
 				SparkTestUtil.UrlResponse urlResponse;
 				try {
