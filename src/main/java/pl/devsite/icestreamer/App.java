@@ -25,6 +25,8 @@ public class App {
 
 	void run() {
 		port(defaultPort);
+		
+		staticFileLocation("/static");
 
 		get("/", (request, response) -> {
 			response.redirect("/status");
@@ -33,6 +35,7 @@ public class App {
 
 		get("/status", (request, response) -> {
 			response.type("text/plain");
+			response.header("Access-Control-Allow-Origin", "*");
 			return status(request, response);
 		});
 

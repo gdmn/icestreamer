@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>icestreamer</title>
+		<link rel="stylesheet" href="styles/pure-min.css">
+		<link href="styles/app.css" rel="stylesheet" type="text/css"/>
+	</head>
+	<body>
+
+		<div class="layout">
+			<div class="header">
+				<h1 class="brand-title">icestream</h1>
+			</div>
+			<div class="content">
+
+			</div>
+			<div class="status">
+
+			</div>
+			<div class="footer">
+				<hr />
+                <div class="pure-menu pure-menu-horizontal">
+                    <ul>
+                        <li class="pure-menu-item"><a href="https://bitbucket.org/dmn/icestreamer/src/tip/README.md?at=default" class="pure-menu-link">About</a></li>
+                        <li class="pure-menu-item"><a href="https://bitbucket.org/dmn/icestreamer" class="pure-menu-link">Code</a></li>
+                    </ul>
+                </div>
+            </div>
+
+		</div>
+		<script src="scripts/zepto.min.js"></script>
+		<script src="scripts/json2.js"></script>
+		<script src="scripts/underscore.js"></script>
+		<script src="scripts/backbone-min.js"></script>
+
+		<!-- Templates -->
+
+		<script type="text/template" id="main-template">
+			<div class="view">
+			<form class="pure-form" action="" onSubmit="return false;">
+			<fieldset>
+			<legend>Search for files in your database</legend>
+			<input type="text"  id='filterInput' value='' placeholder="Search...">
+			<button class="pure-button pure-button-primary" id='filterButton'>Go</button>
+			<button class="pure-button" id='m3uButton'>m3u</button>
+			<button class="pure-button" id='rawButton'>raw</button>
+			<button class="pure-button" id='clearButton'>Clear</button>
+			</fieldset>
+			</form>
+			<div class="found">
+			</div>
+			<ul id="itemsList"></ul>
+			</div>
+		</script>
+
+		<script type="text/template" id="status-template">
+			<pre><%= status %></pre>
+		</script>
+
+		<script type="text/template" id="found-template">
+			<div class="todo-count">Found <b><%= count %></b> <%= count == 1 ? 'item' : 'items' %>.</div>
+		</script>
+
+		<script src="scripts/app.js"></script>
+
+
+	</body>
+</html>
