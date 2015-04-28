@@ -38,14 +38,49 @@
 		}
 	});
 
+	var FoundCounterModel = Backbone.Model.extend({
+		defaults: {
+			count: 0,
+			visible: false,
+			searching: false
+		}
+	});
+
+	var FoundCounterView = Backbone.View.extend({
+		tagName: 'span', // name of tag to be created
+		el: $('#found-placeholder'), // el attaches to existing element
+		template: _.template($('#found-template').html()),
+		// `initialize()` now binds model change/removal to the corresponding handlers below.
+		initialize: function () {
+			_.bindAll(this, 'render', 'unrender'); // every function that uses 'this' as the current object should be in here
+
+			this.model.bind('change', this.render);
+			this.model.bind('remove', this.unrender);
+		},
+		// `render()` now includes two extra `span`s corresponding to the actions swap and delete.
+		render: function () {
+			this.$el.html(this.template(this.model.attributes));
+			//$(this.el).html(this.foundTemplate({count: this.model.get('count')}));
+			return this; // for chainable calls, like .render().el
+		},
+		// `unrender()`: Makes Model remove itself from the DOM.
+		unrender: function () {
+			$(this.el).remove();
+		},
+		// `remove()`: We use the method `destroy()` to remove a model from its collection. Normally this would also delete the record from its persistent storage, but we have overridden that (see above).
+		remove: function () {
+			this.model.destroy();
+		}
+	});
+
 	// Because the new features (swap and delete) are intrinsic to each `Item`, there is no need to modify `ListView`.
 	var ListView = Backbone.View.extend({
 		divStatus: $('div.status'),
 		divContent: $('div.content'),
 		el: $('div.content'), // el attaches to existing element
-		template: _.template($('#main-template').html()),
+		itemsListPlaceHolder: $('#items-list-placeholder'),
+		template: _.template($('#list-template').html()),
 		statusTemplate: _.template($('#status-template').html()),
-		foundTemplate: _.template($('#found-template').html()),
 		events: {
 			'click button#filterButton': 'filterButtonClick',
 			'click button#clearButton': 'clearButtonClick',
@@ -54,17 +89,20 @@
 			'keypress #filterInput': "updateOnEnter",
 		},
 		initialize: function () {
-			_.bindAll(this, 'render', 'appendItem'); // every function that uses 'this' as the current object should be in here
+			_.bindAll(this, 'render', 'appendItem', 'ajaxLoad'); // every function that uses 'this' as the current object should be in here
 
 			this.collection = new List();
 			this.collection.bind('add', this.appendItem); // collection event binder
+
+			this.found = new FoundCounterView({model: new FoundCounterModel()});
+			this.found.render();
 
 			this.render();
 			this.focusOnInput();
 		},
 		render: function () {
 			var that = this;
-			this.$el.html(this.template());
+			this.itemsListPlaceHolder.html(this.template());
 			_(this.collection.models).each(function (item) { // in case collection is not empty
 				that.appendItem(item);
 			}, this);
@@ -105,8 +143,19 @@
 			//_.invoke(this.collection.models, 'destroy');
 			this.collection.reset();
 			$('ul', this.el).empty();
+			this.found.model.set({searching: false, visible: false});
 		},
 		ajaxLoad: function (data, success2) {
+			var that = this;
+			that.found.model.set({searching: true, visible: true});
+			function sleep(milliseconds) {
+				var start = new Date().getTime();
+				for (var i = 0; i < 1e7; i++) {
+					if ((new Date().getTime() - start) > milliseconds) {
+						break;
+					}
+				}
+			}
 			$.ajax({
 				type: 'GET',
 				url: '../list',
@@ -114,9 +163,12 @@
 				dataType: 'text',
 				timeout: 3000,
 				success: function (data) {
+					sleep(1000);
 					success2(data);
+					that.found.model.set({searching: false, visible: true});
 				},
 				error: function (xhr, type) {
+					that.found.model.set({searching: false, visible: false});
 					alert('Ajax error!');
 				}
 			});
@@ -133,7 +185,6 @@
 		},
 		filterButtonClick: function () {
 			var filterInput = $('#filterInput');
-			console.log(': %s', filterInput.val());
 			this.clearItems();
 			var that = this;
 			this.ajaxLoad({format: 'names', s: filterInput.val()}, function (data) {
@@ -143,8 +194,8 @@
 						that.addItemFromLine(item);
 						countLines += 1;
 					}
-				});				
-				$('div.found').html(that.foundTemplate({count: countLines}));
+				});
+				that.found.model.set({count: countLines});
 			});
 			this.focusOnInput();
 		},

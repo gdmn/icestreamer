@@ -14,8 +14,23 @@
 			<div class="header">
 				<h1 class="brand-title">icestream</h1>
 			</div>
-			<div class="content">
+			
 
+			<div class="content">
+				<div class="view">
+					<form class="pure-form" action="" onSubmit="return false;">
+						<fieldset>
+							<legend>Search for files in your database</legend>
+							<input type="text"  id='filterInput' value='' placeholder="Search...">
+							<button class="pure-button pure-button-primary" id='filterButton'>Go</button>
+							<button class="pure-button" id='m3uButton'>m3u</button>
+							<button class="pure-button" id='rawButton'>raw</button>
+							<button class="pure-button" id='clearButton'>Clear</button>
+							<span id="found-placeholder"></span>
+						</fieldset>
+					</form>
+					<span id="items-list-placeholder"/>
+				</div>
 			</div>
 			<div class="status">
 
@@ -38,22 +53,8 @@
 
 		<!-- Templates -->
 
-		<script type="text/template" id="main-template">
-			<div class="view">
-			<form class="pure-form" action="" onSubmit="return false;">
-			<fieldset>
-			<legend>Search for files in your database</legend>
-			<input type="text"  id='filterInput' value='' placeholder="Search...">
-			<button class="pure-button pure-button-primary" id='filterButton'>Go</button>
-			<button class="pure-button" id='m3uButton'>m3u</button>
-			<button class="pure-button" id='rawButton'>raw</button>
-			<button class="pure-button" id='clearButton'>Clear</button>
-			</fieldset>
-			</form>
-			<div class="found">
-			</div>
-			<ul id="itemsList"></ul>
-			</div>
+		<script type="text/template" id="list-template">
+			<ul id="items-list"></ul>
 		</script>
 
 		<script type="text/template" id="status-template">
@@ -61,7 +62,14 @@
 		</script>
 
 		<script type="text/template" id="found-template">
-			<div class="todo-count">Found <b><%= count %></b> <%= count == 1 ? 'item' : 'items' %>.</div>
+			<% if (visible) { %>
+				<% if (searching) { %>
+					Searching...
+				<% } else { %>				
+					Found <b><%= count %></b> <%= count == 1 ? 'item' : 'items' %>.
+				<% } %>
+			<% } else { %>				
+			<% } %>
 		</script>
 
 		<script src="scripts/app.js"></script>
