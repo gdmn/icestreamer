@@ -73,6 +73,47 @@
 		}
 	});
 
+	var StatusModel = Backbone.Model.extend({
+		defaults: {
+			status: ''
+		},
+		initialize: function() {
+			var that = this;						
+			$.ajax({
+				type: 'GET',
+				url: '../status',
+				dataType: 'text',
+				timeout: 3000,
+				context: $('div.status'),
+				success: function (data) {
+					that.set('status', data);
+				},
+			});
+		}
+	});
+
+	var StatusView = Backbone.View.extend({
+		tagName: 'span',
+		el: $('#status-placeholder'),
+		template: _.template($('#status-template').html()),
+		initialize: function () {
+			_.bindAll(this, 'render', 'unrender');
+			this.model.bind('change', this.render);
+			this.model.bind('remove', this.unrender);
+		},
+		render: function () {
+			console.log(this.model.attributes);
+			this.$el.html(this.template(this.model.attributes));
+			return this;
+		},
+		unrender: function () {
+			$(this.el).remove();
+		},
+		remove: function () {
+			this.model.destroy();
+		}
+	});
+
 	// Because the new features (swap and delete) are intrinsic to each `Item`, there is no need to modify `ListView`.
 	var ListView = Backbone.View.extend({
 		divStatus: $('div.status'),
@@ -96,6 +137,8 @@
 
 			this.found = new FoundCounterView({model: new FoundCounterModel()});
 			this.found.render();
+			this.status = new StatusView({model: new StatusModel()});
+			this.status.render();
 
 			this.render();
 			this.focusOnInput();
@@ -106,17 +149,6 @@
 			_(this.collection.models).each(function (item) { // in case collection is not empty
 				that.appendItem(item);
 			}, this);
-
-			$.ajax({
-				type: 'GET',
-				url: '../status',
-				dataType: 'text',
-				timeout: 3000,
-				context: $('div.status'),
-				success: function (data) {
-					that.divStatus.html(that.statusTemplate({status: data}));
-				},
-			});
 
 			return this;
 		},
@@ -148,14 +180,6 @@
 		ajaxLoad: function (data, success2) {
 			var that = this;
 			that.found.model.set({searching: true, visible: true});
-			function sleep(milliseconds) {
-				var start = new Date().getTime();
-				for (var i = 0; i < 1e7; i++) {
-					if ((new Date().getTime() - start) > milliseconds) {
-						break;
-					}
-				}
-			}
 			$.ajax({
 				type: 'GET',
 				url: '../list',
@@ -163,7 +187,6 @@
 				dataType: 'text',
 				timeout: 3000,
 				success: function (data) {
-					sleep(1000);
 					success2(data);
 					that.found.model.set({searching: false, visible: true});
 				},

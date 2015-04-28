@@ -26,15 +26,15 @@
 							<button class="pure-button" id='m3uButton'>m3u</button>
 							<button class="pure-button" id='rawButton'>raw</button>
 							<button class="pure-button" id='clearButton'>Clear</button>
-							<span id="found-placeholder"></span>
 						</fieldset>
 					</form>
+					<p>
+						<span id="found-placeholder"></span>
+					</p>
 					<span id="items-list-placeholder"/>
 				</div>
 			</div>
-			<div class="status">
-
-			</div>
+			<div id="status-placeholder"></div>
 			<div class="footer">
 				<hr />
                 <div class="pure-menu pure-menu-horizontal">
@@ -68,7 +68,7 @@
 				<% } else { %>				
 					Found <b><%= count %></b> <%= count == 1 ? 'item' : 'items' %>.
 				<% } %>
-			<% } else { %>				
+			<% } else { %>
 			<% } %>
 		</script>
 
