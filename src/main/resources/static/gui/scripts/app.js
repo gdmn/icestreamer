@@ -6,9 +6,7 @@
 
 	var Item = Backbone.Model.extend({
 		defaults: {
-			name: 'name...',
-			part1: 'hello',
-			part2: 'world'
+			name: 'name...'
 		}
 	});
 
@@ -27,7 +25,6 @@
 		},
 		// `render()` now includes two extra `span`s corresponding to the actions swap and delete.
 		render: function () {
-			//$(this.el).html('<span style="color:black;">' + this.model.get('name') + ' ' + this.model.get('part1') + '</span> &nbsp; &nbsp; <span class="swap" style="font-family:sans-serif; color:blue; cursor:pointer;">[swap]</span> <span class="delete" style="cursor:pointer; color:red; font-family:sans-serif;">[delete]</span>');
 			$(this.el).html(this.model.get('name'));
 			return this; // for chainable calls, like .render().el
 		},
@@ -63,8 +60,6 @@
 			this.collection.bind('add', this.appendItem); // collection event binder
 
 			this.render();
-
-			this.loadList();
 			this.focusOnInput();
 		},
 		render: function () {
@@ -122,7 +117,7 @@
 					success2(data);
 				},
 				error: function (xhr, type) {
-					alert('Ajax error!')
+					alert('Ajax error!');
 				}
 			});
 		},
@@ -161,11 +156,6 @@
 			var filterInput = document.getElementById('filterInput');
 			filterInput.focus();
 			filterInput.select();
-		},
-		loadList: function () {
-			console.log('hostname: ' + window.location.hostname);
-			console.log('host: ' + window.location.host);
-			console.log('href: ' + window.location.href);
 		}
 	});
 
