@@ -5,8 +5,10 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,7 +27,7 @@ public class App {
 
 	void run() {
 		port(defaultPort);
-		
+
 		staticFileLocation("/static");
 
 		get("/", (request, response) -> {
@@ -100,6 +102,36 @@ public class App {
 			response.redirect("/status");
 			return null;
 		});
+		
+		get("/list", "application/json", (request, response) -> {
+			String host = queriedHost(request);
+			String filter = queriedSearch(request);
+
+			if (filter != null) {
+				if (!(filter.contains("*") || filter.contains("?"))) {
+					filter = ".*" + filter + ".*";
+				}
+			}
+
+			List<Item> items = filterAndSort(allItems.items.values(), filter);
+
+			//if ("application/json".equals(request.headers("Accept"))) {}
+			response.type("application/json");
+			Map<String, Object> result = new HashMap<>();
+			result.put("total", items.size());
+			int listBegin = Integer.parseInt(request.queryParams("start").toString());
+			int listEnd = listBegin + Integer.parseInt(request.queryParams("numberOfRowsToRetrieve").toString());
+			if (listBegin >= items.size()) {
+				listBegin = items.size();
+			}
+			if (listEnd >= items.size()) {
+				listEnd = items.size();
+			}
+			result.put("data", items.subList(listBegin, listEnd));
+			result.put("success", true);
+			result.put("message", "OK");
+			return result;
+		}, new JsonTransformer());
 
 		get("/list", (request, response) -> {
 			String host = queriedHost(request);
@@ -126,7 +158,7 @@ public class App {
 		});
 	}
 
-	Collection<Item> filterAndSort(Collection<Item> input, String regex) {
+	List<Item> filterAndSort(Collection<Item> input, String regex) {
 		List<Item> items;
 		items = new ArrayList(input);
 		if (regex != null && !regex.isEmpty()) {

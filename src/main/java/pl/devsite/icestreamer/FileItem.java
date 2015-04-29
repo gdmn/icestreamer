@@ -1,5 +1,6 @@
 package pl.devsite.icestreamer;
 
+import com.google.gson.annotations.SerializedName;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,6 +15,7 @@ import java.util.regex.Pattern;
 
 class FileItem implements Item {
 
+	@SerializedName("name")
 	String canonicalPath;
 
 	@Override
@@ -58,31 +60,31 @@ class FileItem implements Item {
 			throw new IOException(ex);
 		}
 	}
-	
+
 	@Override
 	public String getName() {
 		return fileName();
 	}
-	
+
 	private String fileName() {
 		if (canonicalPath != null) {
-			return canonicalPath.substring(canonicalPath.lastIndexOf('/')+1);
+			return canonicalPath.substring(canonicalPath.lastIndexOf('/') + 1);
 		}
-		return null;		
+		return null;
 	}
-	
+
 	private String dirName() {
 		if (canonicalPath != null) {
 			return canonicalPath.substring(0, canonicalPath.lastIndexOf('/'));
 		}
-		return null;		
+		return null;
 	}
 
 	@Override
 	public boolean matches(Pattern pattern) {
 		if (canonicalPath != null) {
-				Matcher m = pattern.matcher(canonicalPath);
-				return m.matches();
+			Matcher m = pattern.matcher(canonicalPath);
+			return m.matches();
 		}
 		return false;
 	}
