@@ -6,12 +6,47 @@
 
 	var Item = Backbone.Model.extend({
 		defaults: {
-			name: 'name...'
+			name: ''
 		}
 	});
 
 	var List = Backbone.Collection.extend({
-		model: Item
+		data: '',
+		page: 0,
+		pageSize: 10,
+		alreadyRendered: 0,
+		exhausted: true,
+		model: Item,
+		initialize: function () {
+			_.bindAll(this, 'fetchMoreData', 'setData');
+		},
+		setData: function (lines) {
+			this.data = lines.split("\n");
+			this.page = 0;
+			this.alreadyRendered = 0;
+			this.exhausted = false;
+		},
+		fetchMoreData: function () {
+			if (this.exhausted) {
+				return false;
+			}
+			var that = this;
+
+			$.each(_.slice(this.data, this.alreadyRendered, this.alreadyRendered + this.pageSize), function (index, line) {
+				if (!_.isEmpty(line)) {
+					var item = new Item();
+					item.set({
+						name: line,
+					});
+					that.add(item);
+				}
+			});
+			this.alreadyRendered += this.pageSize;
+			if (this.alreadyRendered >= this.data.length) {
+				this.exhausted = true;
+			}
+			return true;
+		},
 	});
 
 	var ItemView = Backbone.View.extend({
@@ -77,8 +112,8 @@
 		defaults: {
 			status: ''
 		},
-		initialize: function() {
-			var that = this;						
+		initialize: function () {
+			var that = this;
 			$.ajax({
 				type: 'GET',
 				url: '../status',
@@ -138,6 +173,28 @@
 			this.found.render();
 			this.status = new StatusView({model: new StatusModel()});
 			this.status.render();
+
+			var self = this;
+			var win = $(window);
+			var doc = $(document);
+			var infinityScrollHandler = function (e) {
+				if (!self.collection.exhausted) {
+					if ((win.scrollTop() + win.height()) > (doc.height() - win.height())) {
+						return self.collection.fetchMoreData();
+					}
+				}
+				return false;
+			};
+			this.infinityScrollHandler = infinityScrollHandler;
+
+			//start of scroll event for touch devices
+			if (document.addEventListener) {
+				document.addEventListener("touchmove", infinityScrollHandler, false);
+				document.addEventListener("scroll", infinityScrollHandler, false);
+			}
+			window.onresize = function (event) {
+				self.infinityScrollHandler();
+			};
 
 			this.render();
 			this.focusOnInput();
@@ -213,11 +270,15 @@
 				var countLines = 0;
 				$.each(data.split("\n"), function (index, item) {
 					if (!_.isEmpty(item)) {
-						that.addItemFromLine(item);
 						countLines += 1;
 					}
 				});
 				that.found.model.set({count: countLines});
+
+				that.collection.setData(data);
+				while (that.infinityScrollHandler()) {
+					_.noop();
+				}
 			});
 			this.focusOnInput();
 		},
