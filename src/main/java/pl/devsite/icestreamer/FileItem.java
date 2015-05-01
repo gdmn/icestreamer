@@ -17,6 +17,9 @@ class FileItem implements Item {
 
 	@SerializedName("name")
 	String canonicalPath;
+	@SerializedName("hashcode")
+	String hashcodeSerialized;
+	
 
 	@Override
 	public int hashCode() {
@@ -47,6 +50,7 @@ class FileItem implements Item {
 		try {
 			//this.canonicalPath = "file:/"+file.getCanonicalPath();
 			this.canonicalPath = file.getCanonicalPath();
+			this.hashcodeSerialized = "h"+Integer.toHexString(this.hashCode());
 		} catch (IOException ex) {
 			Logger.getLogger(FileItem.class.getName()).log(Level.SEVERE, null, ex);
 		}

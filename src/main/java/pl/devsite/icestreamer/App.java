@@ -31,7 +31,7 @@ public class App {
 		staticFileLocation("/static");
 
 		get("/", (request, response) -> {
-			response.redirect("/status");
+			response.redirect("/gui");
 			return null;
 		});
 
@@ -115,19 +115,10 @@ public class App {
 
 			List<Item> items = filterAndSort(allItems.items.values(), filter);
 
-			//if ("application/json".equals(request.headers("Accept"))) {}
 			response.type("application/json");
 			Map<String, Object> result = new HashMap<>();
 			result.put("total", items.size());
-			int listBegin = Integer.parseInt(request.queryParams("start").toString());
-			int listEnd = listBegin + Integer.parseInt(request.queryParams("numberOfRowsToRetrieve").toString());
-			if (listBegin >= items.size()) {
-				listBegin = items.size();
-			}
-			if (listEnd >= items.size()) {
-				listEnd = items.size();
-			}
-			result.put("data", items.subList(listBegin, listEnd));
+			result.put("data", items);
 			result.put("success", true);
 			result.put("message", "OK");
 			return result;

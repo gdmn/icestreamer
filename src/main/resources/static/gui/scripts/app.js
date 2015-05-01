@@ -6,7 +6,8 @@
 
 	var Item = Backbone.Model.extend({
 		defaults: {
-			name: ''
+			name: '',
+			hashcode: ''
 		}
 	});
 
@@ -20,8 +21,8 @@
 		initialize: function () {
 			_.bindAll(this, 'fetchMoreData', 'setData');
 		},
-		setData: function (lines) {
-			this.data = lines.split("\n");
+		setData: function (json) {
+			this.data = json;
 			this.page = 0;
 			this.alreadyRendered = 0;
 			this.exhausted = false;
@@ -32,17 +33,16 @@
 			}
 			var that = this;
 
-			$.each(_.slice(this.data, this.alreadyRendered, this.alreadyRendered + this.pageSize), function (index, line) {
-				if (!_.isEmpty(line)) {
+			$.each(_.slice(this.data.data, this.alreadyRendered, this.alreadyRendered + this.pageSize), function (index, i) {
 					var item = new Item();
 					item.set({
-						name: line,
+						name: i.name,
+						hashcode: i.hashcode
 					});
 					that.add(item);
-				}
 			});
 			this.alreadyRendered += this.pageSize;
-			if (this.alreadyRendered >= this.data.length) {
+			if (this.alreadyRendered >= this.data.total) {
 				this.exhausted = true;
 			}
 			return true;
@@ -50,26 +50,41 @@
 	});
 
 	var ItemView = Backbone.View.extend({
-		tagName: 'li', // name of tag to be created
-		// `initialize()` now binds model change/removal to the corresponding handlers below.
+		tagName: 'li',
+		template: _.template($('#item-template').html()),
+		events: {
+			'click span.infoButton': 'informationButtonClick',
+		},
 		initialize: function () {
 			_.bindAll(this, 'render', 'unrender'); // every function that uses 'this' as the current object should be in here
 
 			this.model.bind('change', this.render);
 			this.model.bind('remove', this.unrender);
 		},
-		// `render()` now includes two extra `span`s corresponding to the actions swap and delete.
-		render: function () {
-			$(this.el).html(this.model.get('name'));
-			return this; // for chainable calls, like .render().el
+		render: function () {		
+			this.$el.html(this.template(this.model.attributes));
+			return this;
 		},
-		// `unrender()`: Makes Model remove itself from the DOM.
 		unrender: function () {
 			$(this.el).remove();
 		},
-		// `remove()`: We use the method `destroy()` to remove a model from its collection. Normally this would also delete the record from its persistent storage, but we have overridden that (see above).
 		remove: function () {
 			this.model.destroy();
+		},
+		informationButtonClick: function () {
+			var that = this;
+			$.ajax({
+				type: 'GET',
+				url: '../info/'+this.model.get('hashcode'),
+				dataType: 'text',
+				timeout: 3000,
+				success: function (data) {
+					alert(data);
+				},
+				error: function (xhr, type) {
+					alert('Ajax error!');
+				}
+			});
 		}
 	});
 
@@ -164,7 +179,7 @@
 			'keypress #filterInput': "updateOnEnter",
 		},
 		initialize: function () {
-			_.bindAll(this, 'render', 'appendItem', 'ajaxLoad'); // every function that uses 'this' as the current object should be in here
+			_.bindAll(this, 'render', 'appendItem', 'ajaxLoadList'); // every function that uses 'this' as the current object should be in here
 
 			this.collection = new List();
 			this.collection.bind('add', this.appendItem); // collection event binder
@@ -233,15 +248,15 @@
 			$('ul', this.el).empty();
 			this.found.model.set({searching: false, visible: false});
 		},
-		ajaxLoad: function (data, success2) {
+		ajaxLoadList: function (data, success2) {
 			var that = this;
 			that.found.model.set({searching: true, visible: true});
 			$.ajax({
 				type: 'GET',
 				url: '../list',
 				data: data,
-				dataType: 'text',
-				timeout: 3000,
+				dataType: 'json',
+				timeout: 20000,
 				success: function (data) {
 					success2(data);
 					that.found.model.set({searching: false, visible: true});
@@ -266,14 +281,8 @@
 			var filterInput = $('#filterInput');
 			this.clearItems();
 			var that = this;
-			this.ajaxLoad({format: 'names', s: filterInput.val()}, function (data) {
-				var countLines = 0;
-				$.each(data.split("\n"), function (index, item) {
-					if (!_.isEmpty(item)) {
-						countLines += 1;
-					}
-				});
-				that.found.model.set({count: countLines});
+			this.ajaxLoadList({format: 'names', s: filterInput.val()}, function (data) {
+				that.found.model.set({count: data.total});
 
 				that.collection.setData(data);
 				while (that.infinityScrollHandler()) {
