@@ -34,12 +34,12 @@
 			var that = this;
 
 			$.each(_.slice(this.data.data, this.alreadyRendered, this.alreadyRendered + this.pageSize), function (index, i) {
-					var item = new Item();
-					item.set({
-						name: i.name,
-						hashcode: i.hashcode
-					});
-					that.add(item);
+				var item = new Item();
+				item.set({
+					name: i.name,
+					hashcode: i.hashcode
+				});
+				that.add(item);
 			});
 			this.alreadyRendered += this.pageSize;
 			if (this.alreadyRendered >= this.data.total) {
@@ -61,7 +61,7 @@
 			this.model.bind('change', this.render);
 			this.model.bind('remove', this.unrender);
 		},
-		render: function () {		
+		render: function () {
 			this.$el.html(this.template(this.model.attributes));
 			return this;
 		},
@@ -75,7 +75,7 @@
 			var that = this;
 			$.ajax({
 				type: 'GET',
-				url: '../info/'+this.model.get('hashcode'),
+				url: '../info/' + this.model.get('hashcode'),
 				dataType: 'text',
 				timeout: 3000,
 				success: function (data) {
@@ -177,6 +177,7 @@
 			'click button#m3uButton': 'm3uButtonClick',
 			'click button#rawButton': 'rawButtonClick',
 			'keypress #filterInput': "updateOnEnter",
+			'click button#renderAllButton': 'renderAllButtonClick',
 		},
 		initialize: function () {
 			_.bindAll(this, 'render', 'appendItem', 'ajaxLoadList'); // every function that uses 'this' as the current object should be in here
@@ -192,11 +193,15 @@
 			var self = this;
 			var win = $(window);
 			var doc = $(document);
+			
 			var infinityScrollHandler = function (e) {
 				if (!self.collection.exhausted) {
 					if ((win.scrollTop() + win.height()) > (doc.height() - win.height())) {
-						return self.collection.fetchMoreData();
+						var result = self.collection.fetchMoreData();
+						return result;
 					}
+				} else {
+					$('button#renderAllButton').hide();
 				}
 				return false;
 			};
@@ -212,7 +217,7 @@
 			};
 
 			this.render();
-			this.focusOnInput();
+			this.clearButtonClick();
 		},
 		render: function () {
 			var that = this;
@@ -247,6 +252,7 @@
 			this.collection.reset();
 			$('ul', this.el).empty();
 			this.found.model.set({searching: false, visible: false});
+			$('button#renderAllButton').hide();
 		},
 		ajaxLoadList: function (data, success2) {
 			var that = this;
@@ -277,9 +283,16 @@
 			this.focusOnInput();
 			window.open('../list?format=raw&s=' + filterInput.val());
 		},
+		renderAllButtonClick: function () {
+			while (this.collection.fetchMoreData()) {
+				_.noop();
+			}
+			$('button#renderAllButton').hide();
+		},
 		filterButtonClick: function () {
 			var filterInput = $('#filterInput');
 			this.clearItems();
+			$('button#renderAllButton').show();
 			var that = this;
 			this.ajaxLoadList({format: 'names', s: filterInput.val()}, function (data) {
 				that.found.model.set({count: data.total});
