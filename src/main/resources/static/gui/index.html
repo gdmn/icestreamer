@@ -54,12 +54,7 @@
 		<!-- Templates -->
 
 		<script type="text/template" id="list-template">
-			<ul id="items-list"></ul>
-		</script>
-
-		<script type="text/template" id="item-template">
-			<span><%= name %></span>
-			<span class="infoButton" style="cursor:pointer; color:red; font-family:sans-serif;">[info]</span>
+			<div id="items-list"></div>
 		</script>
 
 		<script type="text/template" id="status-template">
@@ -69,16 +64,28 @@
 		<script type="text/template" id="found-template">
 			<% if (visible) { %>
 			<% if (searching) { %>
-			Searching...
+				Searching...
 			<% } else { %>				
-			Found <b><%= count %></b> <%= count == 1 ? 'item' : 'items' %>.
+				Found <b><%= count %></b> <%= count == 1 ? 'item' : 'items' %>.
 			<% } %>
 			<% } else { %>
 			<% } %>
 		</script>
 
+		<script type="text/template" id="item-template">
+			<% if (_.isEmpty(tags)) { %>
+				<span class="tags-title"><%= name %></span>
+				<span class="infoButton" style="cursor:pointer; color:red; font-family:sans-serif;">[info]</span>
+			<% } else { %>
+				<span class="tags-artist"><%= tags.Artist %></span>&nbsp;
+				<span class="tags-album"><%= tags.Album %></span>&nbsp;
+				<span class="tags-year">(<%= tags.Year %>)</span>
+				<br/>
+				<span class="tags-title"><%= tags.Title %></span>&nbsp;
+				<span class="tags-length"><%= tags.Length %></span>
+			<% } %>
+		</script>
+
 		<script src="scripts/app.js"></script>
-
-
 	</body>
 </html>

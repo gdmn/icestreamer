@@ -4,10 +4,13 @@
 		success();
 	};
 
+	var cache = {};
+
 	var Item = Backbone.Model.extend({
 		defaults: {
 			name: '',
-			hashcode: ''
+			hashcode: '',
+			tags: {}
 		}
 	});
 
@@ -50,13 +53,13 @@
 	});
 
 	var ItemView = Backbone.View.extend({
-		tagName: 'li',
+		tagName: 'div',
 		template: _.template($('#item-template').html()),
 		events: {
 			'click span.infoButton': 'informationButtonClick',
 		},
 		initialize: function () {
-			_.bindAll(this, 'render', 'unrender'); // every function that uses 'this' as the current object should be in here
+			_.bindAll(this, 'render', 'unrender', 'fetchTags'); // every function that uses 'this' as the current object should be in here
 
 			this.model.bind('change', this.render);
 			this.model.bind('remove', this.unrender);
@@ -71,20 +74,30 @@
 		remove: function () {
 			this.model.destroy();
 		},
-		informationButtonClick: function () {
+		fetchTags: function () {
 			var that = this;
-			$.ajax({
-				type: 'GET',
-				url: '../info/' + this.model.get('hashcode'),
-				dataType: 'text',
-				timeout: 3000,
-				success: function (data) {
-					alert(data);
-				},
-				error: function (xhr, type) {
-					alert('Ajax error!');
-				}
-			});
+			if (_.isEmpty(cache[that.model.get('hashcode')])) {
+				$.ajax({
+					type: 'GET',
+					url: '../info/' + that.model.get('hashcode'),
+					dataType: 'text',
+					timeout: 30000,
+					success: function (data) {
+						var parsed = JSON.parse(data);
+						cache[that.model.get('hashcode')] = parsed;
+						that.model.set('tags', parsed);
+					},
+					error: function (xhr, type) {
+						console.log('ItemView.fetchTags Ajax error!');
+					}
+				});
+			} else {
+				var parsed = cache[that.model.get('hashcode')];
+				that.model.set('tags', parsed);
+			}
+		},
+		informationButtonClick: function () {
+			this.fetchTags();
 		}
 	});
 
@@ -193,7 +206,7 @@
 			var self = this;
 			var win = $(window);
 			var doc = $(document);
-			
+
 			var infinityScrollHandler = function (e) {
 				if (!self.collection.exhausted) {
 					if ((win.scrollTop() + win.height()) > (doc.height() - win.height())) {
@@ -228,18 +241,13 @@
 
 			return this;
 		},
-		addItemFromLine: function (line) {
-			var item = new Item();
-			item.set({
-				name: line,
-			});
-			this.collection.add(item);
-		},
 		appendItem: function (item) {
 			var itemView = new ItemView({
 				model: item
 			});
-			$('ul', this.el).append(itemView.render().el);
+			$('#items-list', this.el).append(itemView.render().el);
+			//this.divItems.append(itemView.render().el);
+			itemView.fetchTags();
 		},
 		clearButtonClick: function () {
 			this.clearItems();
@@ -250,7 +258,7 @@
 		clearItems: function () {
 			//_.invoke(this.collection.models, 'destroy');
 			this.collection.reset();
-			$('ul', this.el).empty();
+			$('#items-list', this.el).empty();
 			this.found.model.set({searching: false, visible: false});
 			$('button#renderAllButton').hide();
 		},

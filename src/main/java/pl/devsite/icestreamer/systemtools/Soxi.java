@@ -42,6 +42,13 @@ public class Soxi implements SystemProcessInterface<String>, SystemProcessCallba
 				if (dot > -1) {
 					seconds = seconds.substring(0, dot);
 				}
+				
+				try {
+					int secondsInt = Integer.parseInt(seconds);
+					int m = secondsInt / 60;
+					int s = secondsInt % 60;
+					seconds = m + ":" + (s<10 ? "0" + s : s);
+				} catch (NumberFormatException e) {}
 			}
 
 			soxi = Soxi.getInstance();
