@@ -292,7 +292,6 @@
 		filterButtonClick: function () {
 			var filterInput = $('#filterInput');
 			this.clearItems();
-			$('button#renderAllButton').show();
 			var that = this;
 			this.ajaxLoadList({format: 'names', s: filterInput.val()}, function (data) {
 				that.found.model.set({count: data.total});
@@ -301,6 +300,7 @@
 				while (that.infinityScrollHandler()) {
 					_.noop();
 				}
+				$('button#renderAllButton').show();
 			});
 			this.focusOnInput();
 		},
