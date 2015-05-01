@@ -79,9 +79,9 @@
 			<% } else { %>
 				<span class="tags-artist"><%= tags.Artist %></span>&nbsp;
 				<span class="tags-album"><%= tags.Album %></span>&nbsp;
-				<span class="tags-year">(<%= tags.Year %>)</span>
+				<span class="tags-year"><%= _.isEmpty(tags.Year) ? '' : '(' + tags.Year + ')' %></span>
 				<br/>
-				<span class="tags-title"><%= tags.Title %></span>&nbsp;
+				<span class="tags-title"><%= _.isEmpty(tags.Title) ? tags.path : tags.Title %></span>&nbsp;
 				<span class="tags-length"><%= tags.Length %></span>
 			<% } %>
 		</script>
