@@ -2,6 +2,7 @@ package pl.devsite.icestreamer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 interface Item extends Comparable<Item> {
@@ -22,4 +23,6 @@ interface Item extends Comparable<Item> {
 	boolean matches(Pattern pattern);
 	
 	boolean exists();
+	
+	Map<String, String> getTags();
 }

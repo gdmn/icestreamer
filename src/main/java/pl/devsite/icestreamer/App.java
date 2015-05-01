@@ -82,9 +82,11 @@ public class App {
 			response.type("text/plain");
 			Integer h = parseHashcode(request.params(":hashcode"));
 			if (h != null) {
+				response.type("application/json");
 				Item item = allItems.get(h);
 				if (item != null) {
-					return item.toString();
+					Map<String, String> result = item.getTags();					
+					return new JsonTransformer().render(result);
 				}
 			}
 			halt(404);
@@ -126,26 +128,6 @@ public class App {
 			}
 		});
 
-		/*get("/list", "application/json", (request, response) -> {
-		 String host = queriedHost(request);
-		 String filter = queriedSearch(request);
-
-		 if (filter != null) {
-		 if (!(filter.contains("*") || filter.contains("?"))) {
-		 filter = ".*" + filter + ".*";
-		 }
-		 }
-
-		 List<Item> items = filterAndSort(allItems.items.values(), filter);
-
-		 response.type("application/json");
-		 Map<String, Object> result = new HashMap<>();
-		 result.put("total", items.size());
-		 result.put("data", items);
-		 result.put("success", true);
-		 result.put("message", "OK");
-		 return result;
-		 }, new JsonTransformer());*/
 		post("/", (request, response) -> {
 			String host = queriedHost(request);
 

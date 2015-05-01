@@ -7,11 +7,17 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import pl.devsite.icestreamer.systemtools.Soxi;
 
 class FileItem implements Item {
 
@@ -19,7 +25,6 @@ class FileItem implements Item {
 	String canonicalPath;
 	@SerializedName("hashcode")
 	String hashcodeSerialized;
-	
 
 	@Override
 	public int hashCode() {
@@ -48,9 +53,8 @@ class FileItem implements Item {
 
 	public FileItem(File file) {
 		try {
-			//this.canonicalPath = "file:/"+file.getCanonicalPath();
 			this.canonicalPath = file.getCanonicalPath();
-			this.hashcodeSerialized = "h"+Integer.toHexString(this.hashCode());
+			this.hashcodeSerialized = "h" + Integer.toHexString(this.hashCode());
 		} catch (IOException ex) {
 			Logger.getLogger(FileItem.class.getName()).log(Level.SEVERE, null, ex);
 		}
@@ -108,6 +112,23 @@ class FileItem implements Item {
 	@Override
 	public boolean exists() {
 		return new File(canonicalPath).exists();
+	}
+
+	@Override
+	public Map<String, String> getTags() {
+		String soxiResult = Soxi.query(canonicalPath);
+		if (soxiResult == null) {
+			return Collections.singletonMap("path", canonicalPath);
+		}
+		
+		Stream<String> a = Arrays.asList(soxiResult.split("\n")).stream()
+				.filter(line -> !line.trim().isEmpty())
+				.filter(line -> line.indexOf('=') > -1);
+		Stream<String[]> b = a.map(line -> new String[]{line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=') + 1)});
+		HashMap<String, String> result = b.collect(HashMap::new, (m, v) -> m.put(v[0], v[1]), HashMap::putAll);
+
+		result.put("path", canonicalPath);
+		return result;
 	}
 
 }
