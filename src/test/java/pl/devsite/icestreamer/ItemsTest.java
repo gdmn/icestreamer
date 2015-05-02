@@ -3,6 +3,7 @@ package pl.devsite.icestreamer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -42,6 +43,11 @@ public class ItemsTest {
 		@Override
 		public int compareTo(Item o) {
 			throw new UnsupportedOperationException("Not supported yet.");
+		}
+
+		@Override
+		public Map<String, String> getTags() {
+			throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 		}
 	};
 

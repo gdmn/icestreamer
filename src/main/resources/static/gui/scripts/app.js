@@ -5,6 +5,40 @@
 	};
 
 	var cache = {};
+	var fetchTagsWorkingCounter = 0;
+
+	var fetchTags = function (hashcode, callback) {
+		if (_.isEmpty(cache[hashcode])) {
+			fetchTagsWorkingCounter++;
+			var sleepTime = (fetchTagsWorkingCounter/4) * 300;
+			setTimeout(function () {
+				$.ajax({
+					type: 'GET',
+					url: '../info/' + hashcode,
+					dataType: 'text',
+					timeout: 30000,
+					success: function (data) {
+						fetchTagsWorkingCounter--;
+						var parsed = JSON.parse(data);
+						cache[hashcode] = parsed;
+						if (typeof callback === 'function') {
+							callback(parsed);
+						}
+					},
+					error: function (xhr, type) {
+						fetchTagsWorkingCounter--;
+						console.log('fetchTags: Ajax error!');
+						fetchTags(hashcode, callback);
+					}
+				});
+			}, sleepTime);
+		} else {
+			var parsed = cache[hashcode];
+			if (typeof callback === 'function') {
+				callback(parsed);
+			}
+		}
+	}
 
 	var Item = Backbone.Model.extend({
 		defaults: {
@@ -76,25 +110,9 @@
 		},
 		fetchTags: function () {
 			var that = this;
-			if (_.isEmpty(cache[that.model.get('hashcode')])) {
-				$.ajax({
-					type: 'GET',
-					url: '../info/' + that.model.get('hashcode'),
-					dataType: 'text',
-					timeout: 30000,
-					success: function (data) {
-						var parsed = JSON.parse(data);
-						cache[that.model.get('hashcode')] = parsed;
-						that.model.set('tags', parsed);
-					},
-					error: function (xhr, type) {
-						console.log('ItemView.fetchTags Ajax error!');
-					}
-				});
-			} else {
-				var parsed = cache[that.model.get('hashcode')];
-				that.model.set('tags', parsed);
-			}
+			fetchTags(that.model.get('hashcode'), function (tags) {
+				that.model.set('tags', tags);
+			});
 		},
 		informationButtonClick: function () {
 			this.fetchTags();

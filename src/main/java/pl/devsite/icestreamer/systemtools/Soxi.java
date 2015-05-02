@@ -11,7 +11,7 @@ import pl.devsite.system.SystemProcessInterface;
 import pl.devsite.system.SystemProcessWrapper;
 
 /**
- *
+ * Packages: sox and libsox-fmt-all needed!
  * @author dmn
  */
 public class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<String> {
