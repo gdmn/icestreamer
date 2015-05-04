@@ -30,8 +30,13 @@
 						</fieldset>
 					</form>
 					<p>
-						<span id="found-placeholder"></span>
-						&nbsp;<button class="pure-button button-xsmall" id='renderAllButton'>render all</button>
+						<span id="found-placeholder"></span>						
+						<span id="found-settings">
+							&nbsp;&nbsp;&nbsp;
+							<button class="pure-button button-xsmall" id='renderAllButton'>render all</button>
+							&nbsp;
+							<button class="pure-button button-xsmall" id='showTitlesButton'>load titles</button>
+						</span>
 					</p>
 					<span id="items-list-placeholder"/>
 				</div>
@@ -65,9 +70,9 @@
 		<script type="text/template" id="found-template">
 			<% if (visible) { %>
 			<% if (searching) { %>
-				Searching...
+			Searching...
 			<% } else { %>				
-				Found <b><%= count %></b> <%= count == 1 ? 'item' : 'items' %>.
+			Found <b><%= count %></b> <%= count == 1 ? 'item' : 'items' %>.
 			<% } %>
 			<% } else { %>
 			<% } %>
@@ -75,15 +80,15 @@
 
 		<script type="text/template" id="item-template">
 			<% if (_.isEmpty(tags)) { %>
-				<span class="tags-title"><%= name %></span>
-				<span class="infoButton" style="cursor:pointer; color:red; font-family:sans-serif;">[info]</span>
+			<span class="tags-title"><%= name %></span>
+			<span class="infoButton" style="cursor:pointer; color:rgb(66, 184, 221); font-family:sans-serif;">[load title]</span>
 			<% } else { %>
-				<span class="tags-artist"><%= tags.Artist %></span>&nbsp;
-				<span class="tags-album"><%= tags.Album %></span>&nbsp;
-				<span class="tags-year"><%= _.isEmpty(tags.Year) ? '' : '(' + tags.Year + ')' %></span>
-				<br/>
-				<span class="tags-title"><%= _.isEmpty(tags.Title) ? tags.path : tags.Title %></span>&nbsp;
-				<span class="tags-length"><%= tags.Length %></span>
+			<span class="tags-artist"><%= tags.Artist %></span>&nbsp;
+			<span class="tags-album"><%= tags.Album %></span>&nbsp;
+			<span class="tags-year"><%= _.isEmpty(tags.Year) ? '' : '(' + tags.Year + ')' %></span>
+			<br/>
+			<span class="tags-title"><%= _.isEmpty(tags.Title) ? tags.path : tags.Title %></span>&nbsp;
+			<span class="tags-length"><%= tags.Length %></span>
 			<% } %>
 		</script>
 
