@@ -16,7 +16,7 @@
 					type: 'GET',
 					url: '../info/' + hashcode,
 					dataType: 'text',
-					timeout: 30000,
+					timeout: 10000,
 					success: function (data) {
 						fetchTagsWorkingCounter--;
 						var parsed = JSON.parse(data);
@@ -206,6 +206,7 @@
 			'click button#filterButton': 'filterButtonClick',
 			'click button#clearButton': 'clearButtonClick',
 			'click button#m3uButton': 'm3uButtonClick',
+			'click button#playItButton': 'playItButtonClick',
 			'click button#rawButton': 'rawButtonClick',
 			'keypress #filterInput': "updateOnEnter",
 			'click button#renderAllButton': 'renderAllButtonClick',
@@ -264,7 +265,6 @@
 				model: item
 			});
 			$('#items-list', this.el).append(itemView.render().el);
-			//this.divItems.append(itemView.render().el);
 			itemView.fetchTags();
 		},
 		clearButtonClick: function () {
@@ -303,6 +303,11 @@
 			var filterInput = $('#filterInput');
 			this.focusOnInput();
 			window.open('../list?format=m3u&s=' + filterInput.val());
+		},
+		playItButtonClick: function () {
+			var filterInput = $('#filterInput');
+			this.focusOnInput();
+			window.open('player.html?' + $.param({m3u: '../list?format=m3u&s=' + filterInput.val()}));
 		},
 		rawButtonClick: function () {
 			var filterInput = $('#filterInput');
