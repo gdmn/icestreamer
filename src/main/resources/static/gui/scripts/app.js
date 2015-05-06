@@ -57,6 +57,14 @@
 		model: Item,
 		initialize: function () {
 			_.bindAll(this, 'fetchMoreData', 'setData');
+			this.on('reset', this.resetEvent, this);
+			//this.trigger('reset');
+		},
+		resetEvent: function () {
+			this.data = '';
+			this.page = 0;
+			this.alreadyRendered = 0;
+			this.exhausted = true;
 		},
 		setData: function (json) {
 			this.data = json;
