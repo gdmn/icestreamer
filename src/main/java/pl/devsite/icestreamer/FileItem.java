@@ -124,7 +124,7 @@ class FileItem implements Item {
 		Stream<String> a = Arrays.asList(soxiResult.split("\n")).stream()
 				.filter(line -> !line.trim().isEmpty())
 				.filter(line -> line.indexOf('=') > -1);
-		Stream<String[]> b = a.map(line -> new String[]{line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=') + 1)});
+		Stream<String[]> b = a.map(line -> new String[]{line.substring(0, line.indexOf('=')).toLowerCase(), line.substring(line.indexOf('=') + 1)});
 		HashMap<String, String> result = b.collect(HashMap::new, (m, v) -> m.put(v[0], v[1]), HashMap::putAll);
 
 		result.put("path", canonicalPath);
