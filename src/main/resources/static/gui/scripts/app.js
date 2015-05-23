@@ -361,8 +361,8 @@
 			this.focusOnInput();
 		},
 		updateOnEnter: function (e) {
-			if (e.keyCode == 13)
-				this.filterButtonClick();
+			// zepto takes care of this...
+			//if (e.keyCode == 13) this.filterButtonClick();
 		},
 		focusOnInput: function () {
 			var filterInput = document.getElementById('filterInput');
