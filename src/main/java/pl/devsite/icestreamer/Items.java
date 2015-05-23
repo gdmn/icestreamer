@@ -1,6 +1,7 @@
 package pl.devsite.icestreamer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,13 +14,15 @@ class Items {
 	List<Item> fed = new ArrayList<>();
 
 	public void feed(String... things) {
-		for (String thing : things) {
-			Item i = factory.create(thing);
-			if (i != null) {
-				fed.add(i);
-				items.put(i.hashCode(), i);
-			}
-		}
+		Item[] mapped = Arrays.stream(things).parallel()
+				.map(thing -> factory.create(thing))
+				.filter(thing -> thing != null)
+				.toArray(Item[]::new);
+		Arrays.stream(mapped)
+				.forEach(i -> {
+					fed.add(i);
+					items.put(i.hashCode(), i);
+				});
 	}
 
 	public void feed(Item... things) {

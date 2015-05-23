@@ -60,6 +60,11 @@ class FileItem implements Item {
 		}
 	}
 
+	public FileItem(String canonicalPath) {
+		this.canonicalPath = canonicalPath;
+		this.hashcodeSerialized = "h" + Integer.toHexString(this.hashCode());
+	}
+
 	@Override
 	public InputStream getInputStream() throws IOException {
 		try {
@@ -76,14 +81,14 @@ class FileItem implements Item {
 
 	private String fileName() {
 		if (canonicalPath != null) {
-			return canonicalPath.substring(canonicalPath.lastIndexOf('/') + 1);
+			return canonicalPath.substring(canonicalPath.lastIndexOf(File.separator) + 1);
 		}
 		return null;
 	}
 
 	private String dirName() {
 		if (canonicalPath != null) {
-			return canonicalPath.substring(0, canonicalPath.lastIndexOf('/'));
+			return canonicalPath.substring(0, canonicalPath.lastIndexOf(File.separator));
 		}
 		return null;
 	}
@@ -120,7 +125,7 @@ class FileItem implements Item {
 		if (soxiResult == null) {
 			return Collections.singletonMap("path", canonicalPath);
 		}
-		
+
 		Stream<String> a = Arrays.asList(soxiResult.split("\n")).stream()
 				.filter(line -> !line.trim().isEmpty())
 				.filter(line -> line.indexOf('=') > -1);
