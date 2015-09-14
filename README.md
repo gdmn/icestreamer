@@ -22,10 +22,10 @@ icestreamer - music streaming, hacker style
 ## stream files to mpd
 
 * on the same machine: ```find "`pwd`" -iname '*.mp3' -or -iname '*.ogg'|sort|./icestreamer.sh|while read l;do mpc add "$l";done;mpc play```
-* on a different machine ([httpie](https://github.com/jkbrzt/httpie) needed) (192.168.1.100 is current machine, 192.168.1.4 is MPD server):
+* on a different machine ([httpie](https://github.com/jkbrzt/httpie) required) (192.168.1.100 is current machine, 192.168.1.4 is MPD server):
 
 ```
 export MPD_HOST=192.168.1.4
 mpc clear
-find "`pwd`" -iname '*.mp3' -or -iname '*.ogg'|sort|http POST 'localhost:6680/?name=192.168.1.100'|while read l;do mpc add "$l";done;mpc play
+find "`pwd`" -iname '*.mp3' -or -iname '*.ogg'|sort|http POST '192.168.1.100:6680/'|while read l;do mpc add "$l";done;mpc play
 ```
