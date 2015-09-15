@@ -1,6 +1,8 @@
 icestreamer - music streaming, hacker style
 =====
 
+![icestreamer](icestreamer.png "icestreamer main screen")
+
 ## packages needed
 
 * `gstreamer0.10-plugins-ugly` for jPlayer, playing files directly in a browser
@@ -19,6 +21,11 @@ icestreamer - music streaming, hacker style
 * `find '/srv/music/' '/mnt/pendrive/music/' -iname '*.mp3' -or -iname '*.ogg' | ./icestreamer.sh`
 * browse to http://localhost:6680 and refresh the page
 
+## cache songs
+
+* `find '/srv/music/' '/mnt/pendrive/music/' -iname '*.mp3' -or -iname '*.ogg' > cache.db`
+* load cache: `cat cache.db | ./icestreamer.sh`
+
 ## stream files to mpd
 
 * on the same machine: ```find "`pwd`" -iname '*.mp3' -or -iname '*.ogg'|sort|./icestreamer.sh|while read l;do mpc add "$l";done;mpc play```
@@ -27,5 +34,6 @@ icestreamer - music streaming, hacker style
 ```
 export MPD_HOST=192.168.1.4
 mpc clear
-find "`pwd`" -iname '*.mp3' -or -iname '*.ogg'|sort|http POST '192.168.1.100:6680/'|while read l;do mpc add "$l";done;mpc play
+find "`pwd`" -iname '*.mp3' -or -iname '*.ogg'|sort|http POST '192.168.1.100:6680/'|while read l;do mpc add "$l";done
+mpc play
 ```
