@@ -17,6 +17,7 @@ import spark.Request;
 import spark.Response;
 import static spark.Spark.*;
 
+// http://sparkjava.com/documentation.html
 public class App {
 
 	private static final Logger logger = Logger.getLogger(App.class.getName());
@@ -26,6 +27,11 @@ public class App {
 	private static final String VERSION = "iceserver-api-1.0";
 
 	void run() {
+		int maxThreads = 8;
+		int minThreads = -1;
+		int timeOutMillis = -1;
+		threadPool(maxThreads, minThreads, timeOutMillis);
+
 		port(defaultPort);
 
 		staticFileLocation("/static");
@@ -85,7 +91,7 @@ public class App {
 				response.type("application/json");
 				Item item = allItems.get(h);
 				if (item != null) {
-					Map<String, String> result = item.getTags();					
+					Map<String, String> result = item.getTags();
 					return new JsonTransformer().render(result);
 				}
 			}

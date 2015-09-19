@@ -4,8 +4,13 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 import pl.devsite.system.SystemProcessCallback;
 import pl.devsite.system.SystemProcessInterface;
 import pl.devsite.system.SystemProcessWrapper;
@@ -14,7 +19,7 @@ import pl.devsite.system.SystemProcessWrapper;
  * Packages: sox and libsox-fmt-all needed!
  * @author dmn
  */
-public class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<String> {
+class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<String> {
 
 	private static final Logger logger = Logger.getLogger(Soxi.class.getName());
 	private final String command = "soxi";
@@ -23,6 +28,22 @@ public class Soxi implements SystemProcessInterface<String>, SystemProcessCallba
 	private String resultValue;
 	private final StringBuilder buffer = new StringBuilder();
 	private String additionalOptions;
+	
+	public static Map<String, String> getTags(String fileName) {
+		String soxiResult = Soxi.query(fileName);
+		if (soxiResult == null) {
+			return Collections.singletonMap("path", fileName);
+		}
+
+		Stream<String> a = Arrays.asList(soxiResult.split("\n")).stream()
+				.filter(line -> !line.trim().isEmpty())
+				.filter(line -> line.indexOf('=') > -1);
+		Stream<String[]> b = a.map(line -> new String[]{line.substring(0, line.indexOf('=')).toLowerCase(), line.substring(line.indexOf('=') + 1)});
+		HashMap<String, String> result = b.collect(HashMap::new, (m, v) -> m.put(v[0], v[1]), HashMap::putAll);
+
+		result.put("path", fileName);
+		return result;
+	}
 
 	public static String query(String fileName) {
 		try {
