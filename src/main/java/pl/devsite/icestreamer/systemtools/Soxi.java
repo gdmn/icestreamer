@@ -4,8 +4,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -42,9 +44,15 @@ class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<Stri
 		HashMap<String, String> result = b.collect(HashMap::new, (m, v) -> m.put(v[0], v[1]), HashMap::putAll);
 
 		result.put("path", fileName);
+		result.put("icestreamer-update", Long.toString(new File(fileName).lastModified()));
 		return result;
 	}
-
+	
+	public static boolean needsUpdate(String fileName, String icestreamerUpdate) {
+		return icestreamerUpdate == null ||
+				!icestreamerUpdate.equals(Long.toString(new File(fileName).lastModified()));
+	}
+	
 	public static String query(String fileName) {
 		try {
 			File f = new File(fileName);
