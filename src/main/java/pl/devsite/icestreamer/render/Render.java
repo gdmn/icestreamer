@@ -1,4 +1,4 @@
-package pl.devsite.icestreamer;
+package pl.devsite.icestreamer.render;
 
 import java.io.IOException;
 

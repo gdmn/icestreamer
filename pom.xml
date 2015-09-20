@@ -6,7 +6,20 @@
 	<version>1.0-SNAPSHOT</version>
 	<name>icestreamer</name>
 	<url>http://maven.apache.org</url>
+	<repositories>
+		<repository>
+			<id>sonatype-snapshots</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
+		<dependency>
+			<groupId>org.mapdb</groupId>
+			<artifactId>mapdb</artifactId>
+			<version>2.0.0-SNAPSHOT</version>
+			<!--<version>1.0.8</version>-->
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

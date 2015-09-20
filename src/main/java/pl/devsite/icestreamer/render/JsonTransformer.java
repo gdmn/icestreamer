@@ -1,4 +1,4 @@
-package pl.devsite.icestreamer;
+package pl.devsite.icestreamer.render;
 
 import com.google.gson.Gson;
 import spark.ResponseTransformer;

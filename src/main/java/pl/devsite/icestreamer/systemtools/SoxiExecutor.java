@@ -1,11 +1,11 @@
 package pl.devsite.icestreamer.systemtools;
 
-import pl.devsite.icestreamer.Tags;
+import pl.devsite.icestreamer.tags.Tags;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import pl.devsite.icestreamer.Item;
+import pl.devsite.icestreamer.item.Item;
 
 /**
  *

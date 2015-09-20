@@ -1,5 +1,7 @@
-package pl.devsite.icestreamer;
+package pl.devsite.icestreamer.item;
 
+import pl.devsite.icestreamer.tags.Tags;
+import pl.devsite.icestreamer.tags.TagsService;
 import com.google.gson.annotations.SerializedName;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -7,22 +9,20 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import pl.devsite.icestreamer.systemtools.SoxiExecutor;
 
-class FileItem implements Item {
+public class FileItem implements Item {
 
 	@SerializedName("name")
 	String canonicalPath;
 	@SerializedName("hashcode")
 	String hashcodeSerialized;
+
+	private static TagsService tagsService = TagsService.getInstance();
 
 	@Override
 	public int hashCode() {
@@ -119,13 +119,7 @@ class FileItem implements Item {
 
 	@Override
 	public Tags getTags() {
-		try {
-			Future<Tags> t = SoxiExecutor.getInstance().submit(this);
-			return t.get();
-		} catch (InterruptedException | ExecutionException ex) {
-			Logger.getLogger(FileItem.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		return null;
+		return tagsService.getTags(this);
 	}
 
 }

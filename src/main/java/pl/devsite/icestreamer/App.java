@@ -1,5 +1,10 @@
 package pl.devsite.icestreamer;
 
+import pl.devsite.icestreamer.render.RenderPlain;
+import pl.devsite.icestreamer.render.RenderFactory;
+import pl.devsite.icestreamer.render.JsonTransformer;
+import pl.devsite.icestreamer.item.Item;
+import pl.devsite.icestreamer.tags.TagsService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -13,6 +18,7 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import pl.devsite.icestreamer.item.Items;
 import spark.Request;
 import spark.Response;
 import static spark.Spark.*;
@@ -100,13 +106,15 @@ public class App {
 		});
 
 		get("/clear", (request, response) -> {
-			allItems.clear();
+			TagsService.getInstance().clear();
+			repopulateCacheFromTagsDatabase();
 			response.redirect("/status");
 			return null;
 		});
 
 		get("/clean", (request, response) -> {
-			allItems.clean();
+			TagsService.getInstance().clean();
+			repopulateCacheFromTagsDatabase();
 			response.redirect("/status");
 			return null;
 		});
@@ -119,7 +127,7 @@ public class App {
 					filter = ".*" + filter + ".*";
 				}
 			}
-			List<Item> items = filterAndSort(allItems.items.values(), filter);
+			List<Item> items = filterAndSort(allItems.getItems().values(), filter);
 
 			if ("application/json".equals(request.headers("Accept"))) {
 				response.type("application/json");
@@ -139,7 +147,7 @@ public class App {
 
 			String body = request.body();
 			Items result = serve(body);
-			logger.log(Level.INFO, "Size {0}", allItems.items.size());
+			logger.log(Level.INFO, "Size {0}", allItems.getItems().size());
 			return render(response, request.queryParams("format"), result.getList(), host);
 		});
 	}
@@ -174,6 +182,7 @@ public class App {
 		defaultPort = 0;
 		boolean isThereServerAlready = false;
 		boolean isPortBusy;
+		String defaultDatabase = "icestreamer.db";
 
 		while (i < args.length) {
 			if ("-p".equalsIgnoreCase(args[i]) || "--port".equalsIgnoreCase(args[i])) {
@@ -182,6 +191,9 @@ public class App {
 			}
 			if ("-n".equalsIgnoreCase(args[i]) || "--name".equalsIgnoreCase(args[i])) {
 				defaultName = args[++i];
+			}
+			if ("-d".equalsIgnoreCase(args[i]) || "--database".equalsIgnoreCase(args[i])) {
+				defaultDatabase = args[++i];
 			}
 			i++;
 		}
@@ -252,6 +264,27 @@ public class App {
 				System.exit(0);
 			}
 		}
+
+		TagsService.initialize(defaultDatabase);
+
+		repopulateCacheFromTagsDatabase();
+	}
+
+	void repopulateCacheFromTagsDatabase() {
+		logger.info("Repopulating cache from tags database");
+		Items items = new Items() {
+
+			@Override
+			protected void refreshTags(Item i) {
+			}
+
+		};
+
+		TagsService.getInstance().values().stream().forEach(tags -> {
+			items.feed(tags.get("path"));
+		});
+		allItems = items;
+		logger.log(Level.INFO, "Size {0}", allItems.getItems().size());
 	}
 
 	boolean isIcy(Request request) {

@@ -1,13 +1,13 @@
-package pl.devsite.icestreamer;
+package pl.devsite.icestreamer.item;
 
+import pl.devsite.icestreamer.tags.TagsService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-class Items {
+public class Items {
 
 	Map<Integer, Item> items = new HashMap<>();
 	ItemFactory factory = new ItemFactory();
@@ -22,6 +22,7 @@ class Items {
 				.forEach(i -> {
 					fed.add(i);
 					items.put(i.hashCode(), i);
+					refreshTags(i);
 				});
 	}
 
@@ -29,6 +30,7 @@ class Items {
 		for (Item thing : things) {
 			fed.add(thing);
 			items.put(thing.hashCode(), thing);
+			refreshTags(thing);
 		}
 	}
 
@@ -52,12 +54,13 @@ class Items {
 		items.clear();
 	}
 
-	public void clean() {
-		Map<Integer, Item> map = items.entrySet()
-				.parallelStream()
-				.filter(e -> e.getValue().exists())
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-		items = map;
+	protected void refreshTags(Item i) {
+		TagsService.getInstance().getTags(i);
 	}
 
+	public Map<Integer, Item> getItems() {
+		return items;
+	}
+	
+	
 }

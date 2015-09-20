@@ -1,5 +1,7 @@
-package pl.devsite.icestreamer;
+package pl.devsite.icestreamer.render;
 
+import pl.devsite.icestreamer.item.Item;
+import pl.devsite.icestreamer.item.FileItem;
 import java.io.IOException;
 import spark.Response;
 

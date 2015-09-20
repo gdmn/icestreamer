@@ -1,10 +1,10 @@
-package pl.devsite.icestreamer;
+package pl.devsite.icestreamer.item;
 
 import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class ItemFactory {
+public class ItemFactory {
 	
 	private static final String SEP = File.separator;
 	/*
