@@ -35,8 +35,6 @@
 						<span id="found-settings">
 							&nbsp;&nbsp;&nbsp;
 							<button class="pure-button button-xsmall" id='renderAllButton'>render all</button>
-							&nbsp;
-							<button class="pure-button button-xsmall" id='showTitlesButton'>load titles</button>
 						</span>
 					</p>
 					<span id="items-list-placeholder"/>
@@ -80,17 +78,12 @@
 		</script>
 
 		<script type="text/template" id="item-template">
-			<% if (_.isEmpty(tags)) { %>
-			<span class="tags-title"><%= name %></span>
-			<span class="infoButton" style="cursor:pointer; color:rgb(66, 184, 221); font-family:sans-serif;">[load title]</span>
-			<% } else { %>
 			<span class="tags-artist"><%= tags.artist %></span>&nbsp;
 			<span class="tags-album"><%= tags.album %></span>&nbsp;
 			<span class="tags-year"><%= _.isEmpty(tags.year) ? '' : '(' + tags.year + ')' %></span>
 			<br/>
 			<span class="tags-title"><%= _.isEmpty(tags.title) ? tags.path : tags.title %></span>&nbsp;
 			<span class="tags-length"><%= tags.length %></span>
-			<% } %>
 		</script>
 
 		<script src="scripts/app.js"></script>

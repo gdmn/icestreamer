@@ -69,6 +69,7 @@ public class TagsService {
 				Future<Tags> futureTags = SoxiExecutor.getInstance().submit(item);
 
 				tags = futureTags.get();
+				tags.put("hashcode", "h" + Integer.toHexString(item.hashCode()));
 				tagsMap.put(item.hashCode(), tags);
 				db.commit();
 				return tags;
@@ -125,8 +126,8 @@ public class TagsService {
 			Future<Tags> futureTags = SoxiExecutor.getInstance().submit(item);
 			try {
 				tags = futureTags.get();
+				tags.put("hashcode", "h" + Integer.toHexString(item.hashCode()));
 				tagsMap.put(item.hashCode(), tags);
-				db.commit();
 			} catch (InterruptedException | ExecutionException ex) {
 			}
 		});
@@ -137,6 +138,14 @@ public class TagsService {
 	public void clear() {
 		tagsMap.clear();
 		db.commit();
+	}
+
+	public Tags get(Integer key) {
+		return tagsMap.get(key);
+	}
+
+	public int size() {
+		return tagsMap.size();
 	}
 
 }

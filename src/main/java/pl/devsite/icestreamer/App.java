@@ -18,7 +18,10 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import pl.devsite.icestreamer.item.ItemFactory;
 import pl.devsite.icestreamer.item.Items;
+import pl.devsite.icestreamer.tags.Tags;
 import spark.Request;
 import spark.Response;
 import static spark.Spark.*;
@@ -107,14 +110,12 @@ public class App {
 
 		get("/clear", (request, response) -> {
 			TagsService.getInstance().clear();
-			repopulateCacheFromTagsDatabase();
 			response.redirect("/status");
 			return null;
 		});
 
 		get("/clean", (request, response) -> {
 			TagsService.getInstance().clean();
-			repopulateCacheFromTagsDatabase();
 			response.redirect("/status");
 			return null;
 		});
@@ -127,7 +128,7 @@ public class App {
 					filter = ".*" + filter + ".*";
 				}
 			}
-			List<Item> items = filterAndSort(allItems.getItems().values(), filter);
+			List<Tags> items = filterAndSort(TagsService.getInstance().values(), filter);
 
 			if ("application/json".equals(request.headers("Accept"))) {
 				response.type("application/json");
@@ -138,7 +139,9 @@ public class App {
 				result.put("message", "OK");
 				return new JsonTransformer().render(result);
 			} else {
-				return render(response, request.queryParams("format"), items, host);
+				ItemFactory factory = new ItemFactory();
+				List<Item> itemsList = items.parallelStream().map(tags -> factory.create(tags)).collect(Collectors.toList());
+				return render(response, request.queryParams("format"), itemsList, host);
 			}
 		});
 
@@ -146,35 +149,32 @@ public class App {
 			String host = queriedHost(request);
 
 			String body = request.body();
-			Items result = serve(body);
-			logger.log(Level.INFO, "Size {0}", allItems.getItems().size());
-			return render(response, request.queryParams("format"), result.getList(), host);
+			Collection<Item> result = serve(body);
+			logger.log(Level.INFO, "Size {0}", TagsService.getInstance().size());
+			return render(response, request.queryParams("format"), result, host);
 		});
 	}
 
-	List<Item> filterAndSort(Collection<Item> input, String regex) {
-		List<Item> items;
-		items = new ArrayList(input);
+	List<Tags> filterAndSort(Collection<Tags> input, String regex) {
+		List<Tags> tagsList;
+		tagsList = new ArrayList<>(input);
 		if (regex != null && !regex.isEmpty()) {
 			Pattern pattern = Pattern.compile(regex);
-			for (Iterator<Item> it = items.iterator(); it.hasNext();) {
-				Item item = it.next();
+			for (Iterator<Tags> it = tagsList.iterator(); it.hasNext();) {
+				Tags item = it.next();
 				if (!item.matches(pattern)) {
 					it.remove();
 				}
 			}
 		}
 
-		Collections.sort(items);
-
-		return items;
+		Collections.sort(tagsList);
+		return tagsList;
 	}
 
-	Items serve(String lines) {
+	Collection<Item> serve(String lines) {
 		Items items = new Items();
-		items.feed(parseLines(lines));
-		allItems.merge(items);
-		return items;
+		return items.feed(parseLines(lines));
 	}
 
 	void init(String[] args) throws IOException {
@@ -221,7 +221,7 @@ public class App {
 					String line = sc.nextLine();
 					logger.log(Level.FINE, "System.in: {0}", line);
 					try {
-						System.out.print(renderList(serve(line).getList(), defaultName + ":" + defaultPort));
+						System.out.print(renderList(serve(line), defaultName + ":" + defaultPort));
 					} catch (Exception e) {
 						logger.log(Level.WARNING, null, e);
 					}
@@ -266,25 +266,6 @@ public class App {
 		}
 
 		TagsService.initialize(defaultDatabase);
-
-		repopulateCacheFromTagsDatabase();
-	}
-
-	void repopulateCacheFromTagsDatabase() {
-		logger.info("Repopulating cache from tags database");
-		Items items = new Items() {
-
-			@Override
-			protected void refreshTags(Item i) {
-			}
-
-		};
-
-		TagsService.getInstance().values().stream().forEach(tags -> {
-			items.feed(tags.get("path"));
-		});
-		allItems = items;
-		logger.log(Level.INFO, "Size {0}", allItems.getItems().size());
 	}
 
 	boolean isIcy(Request request) {

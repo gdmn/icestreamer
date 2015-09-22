@@ -3,17 +3,15 @@ package pl.devsite.icestreamer.item;
 import pl.devsite.icestreamer.tags.TagsService;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import pl.devsite.icestreamer.tags.Tags;
 
 public class Items {
 
-	Map<Integer, Item> items = new HashMap<>();
-	ItemFactory factory = new ItemFactory();
-	List<Item> fed = new ArrayList<>();
+	private ItemFactory factory = new ItemFactory();
 
-	public void feed(String... things) {
+	public List<Item> feed(String... things) {
+		final List<Item> fed = new ArrayList<>();
 		Item[] mapped = Arrays.stream(things).parallel()
 				.map(thing -> factory.create(thing))
 				.filter(thing -> thing != null)
@@ -21,46 +19,31 @@ public class Items {
 		Arrays.stream(mapped)
 				.forEach(i -> {
 					fed.add(i);
-					items.put(i.hashCode(), i);
 					refreshTags(i);
 				});
+		return fed;
 	}
 
-	public void feed(Item... things) {
+	public List<Item> feed(Item... things) {
+		final List<Item> fed = new ArrayList<>();
 		for (Item thing : things) {
 			fed.add(thing);
-			items.put(thing.hashCode(), thing);
 			refreshTags(thing);
 		}
-	}
-
-	public void merge(Items mergeWith) {
-		items.putAll(mergeWith.items);
-	}
-
-	public List<Item> getList() {
 		return fed;
 	}
 
 	public int size() {
-		return items.size();
+		return TagsService.getInstance().size();
 	}
 
 	public Item get(Integer key) {
-		return items.get(key);
-	}
-
-	public void clear() {
-		items.clear();
+		Tags tags = TagsService.getInstance().get(key);
+		return factory.create(tags.get("path"));
 	}
 
 	protected void refreshTags(Item i) {
 		TagsService.getInstance().getTags(i);
 	}
 
-	public Map<Integer, Item> getItems() {
-		return items;
-	}
-	
-	
 }

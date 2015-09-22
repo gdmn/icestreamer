@@ -1,20 +1,22 @@
 package pl.devsite.icestreamer.tags;
 
+import com.google.gson.annotations.SerializedName;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.mapdb.Serializer;
 
 /**
  *
  * @author dmn
  */
-public class Tags extends HashMap<String, String> {
+public class Tags extends HashMap<String, String> implements Comparable<Tags> {
 
 	public Tags(Map<? extends String, ? extends String> m) {
 		super(m);
@@ -33,6 +35,18 @@ public class Tags extends HashMap<String, String> {
 					.append("\n");
 		});
 		return result.toString();
+	}
+
+	@Override
+	public int compareTo(Tags o) {
+		if (o == null) {
+			return 1;
+		}
+		if (o instanceof Tags) {
+			Tags other = (Tags) o;
+			return this.get("path").compareTo(other.get("path"));
+		}
+		return this.toString().compareTo(o.toString());
 	}
 
 	public static class CustomSerializer extends Serializer<Tags> implements Serializable {
@@ -71,5 +85,14 @@ public class Tags extends HashMap<String, String> {
 		public int fixedSize() {
 			return -1;
 		}
+	}
+
+	public boolean matches(Pattern pattern) {
+		String path = get("path");
+		if (path != null) {
+			Matcher m = pattern.matcher(path);
+			return m.matches();
+		}
+		return false;
 	}
 }

@@ -29,11 +29,6 @@ public class ItemsTest {
 		}
 
 		@Override
-		public boolean matches(Pattern pattern) {
-			return false;
-		}
-
-		@Override
 		public boolean exists() {
 			return false;
 		}

@@ -12,8 +12,6 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class FileItem implements Item {
 
@@ -89,15 +87,6 @@ public class FileItem implements Item {
 			return canonicalPath.substring(0, canonicalPath.lastIndexOf(File.separator));
 		}
 		return null;
-	}
-
-	@Override
-	public boolean matches(Pattern pattern) {
-		if (canonicalPath != null) {
-			Matcher m = pattern.matcher(canonicalPath);
-			return m.matches();
-		}
-		return false;
 	}
 
 	@Override

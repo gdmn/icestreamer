@@ -4,42 +4,6 @@
 		success();
 	};
 
-	var cache = {};
-	var fetchTagsWorkingCounter = 0;
-
-	var fetchTags = function (hashcode, callback) {
-		if (_.isEmpty(cache[hashcode])) {
-			fetchTagsWorkingCounter++;
-			var sleepTime = (fetchTagsWorkingCounter / 4) * 300;
-			setTimeout(function () {
-				$.ajax({
-					type: 'GET',
-					url: '../info/' + hashcode,
-					dataType: 'text',
-					timeout: 10000,
-					success: function (data) {
-						fetchTagsWorkingCounter--;
-						var parsed = JSON.parse(data);
-						cache[hashcode] = parsed;
-						if (typeof callback === 'function') {
-							callback(parsed);
-						}
-					},
-					error: function (xhr, type) {
-						fetchTagsWorkingCounter--;
-						console.log('fetchTags: Ajax error!');
-						fetchTags(hashcode, callback);
-					}
-				});
-			}, sleepTime);
-		} else {
-			var parsed = cache[hashcode];
-			if (typeof callback === 'function') {
-				callback(parsed);
-			}
-		}
-	}
-
 	var Item = Backbone.Model.extend({
 		defaults: {
 			name: '',
@@ -82,7 +46,8 @@
 				var item = new Item();
 				item.set({
 					name: i.name,
-					hashcode: i.hashcode
+					hashcode: i.hashcode,
+					tags: i
 				});
 				that.add(item);
 			});
@@ -97,11 +62,8 @@
 	var ItemView = Backbone.View.extend({
 		tagName: 'div',
 		template: _.template($('#item-template').html()),
-		events: {
-			'click span.infoButton': 'informationButtonClick',
-		},
 		initialize: function () {
-			_.bindAll(this, 'render', 'unrender', 'fetchTags'); // every function that uses 'this' as the current object should be in here
+			_.bindAll(this, 'render', 'unrender'); // every function that uses 'this' as the current object should be in here
 
 			this.model.bind('change', this.render);
 			this.model.bind('remove', this.unrender);
@@ -115,15 +77,6 @@
 		},
 		remove: function () {
 			this.model.destroy();
-		},
-		fetchTags: function () {
-			var that = this;
-			fetchTags(that.model.get('hashcode'), function (tags) {
-				that.model.set('tags', tags);
-			});
-		},
-		informationButtonClick: function () {
-			this.fetchTags();
 		}
 	});
 
@@ -210,7 +163,6 @@
 		itemsListPlaceHolder: $('#items-list-placeholder'),
 		template: _.template($('#list-template').html()),
 		statusTemplate: _.template($('#status-template').html()),
-		showTitlesButtonClicked: false,
 		events: {
 			'click button#filterButton': 'filterButtonClick',
 			'click button#clearButton': 'clearButtonClick',
@@ -219,7 +171,6 @@
 			'click button#rawButton': 'rawButtonClick',
 			'keypress #filterInput': "updateOnEnter",
 			'click button#renderAllButton': 'renderAllButtonClick',
-			'click button#showTitlesButton': 'showTitlesButtonClick',
 		},
 		initialize: function () {
 			_.bindAll(this, 'render', 'appendItem', 'ajaxLoadList'); // every function that uses 'this' as the current object should be in here
@@ -275,9 +226,6 @@
 				model: item
 			});
 			$('#items-list', this.el).append(itemView.render().el);
-			if (this.showTitlesButtonClicked) {
-				itemView.fetchTags();
-			}
 		},
 		clearButtonClick: function () {
 			this.clearItems();
@@ -291,8 +239,6 @@
 			$('#items-list', this.el).empty();
 			this.found.model.set({searching: false, visible: false});
 			$('button#renderAllButton').hide();
-			$('button#showTitlesButton').hide();
-			this.showTitlesButtonClicked = false;
 		},
 		ajaxLoadList: function (data, success2) {
 			var that = this;
@@ -334,16 +280,6 @@
 			}
 			$('button#renderAllButton').hide();
 		},
-		showTitlesButtonClick: function () {
-			this.showTitlesButtonClicked = true;
-			$('button#showTitlesButton').hide();
-			var that = this;
-			_.each(that.collection.models, function (item) {
-				fetchTags(item.get('hashcode'), function (tags) {
-					item.set('tags', tags);
-				});
-			});
-		},
 		filterButtonClick: function () {
 			var filterInput = $('#filterInput');
 			this.clearItems();
@@ -356,7 +292,6 @@
 					_.noop();
 				}
 				$('button#renderAllButton').show();
-				$('button#showTitlesButton').show();
 			});
 			this.focusOnInput();
 		},
