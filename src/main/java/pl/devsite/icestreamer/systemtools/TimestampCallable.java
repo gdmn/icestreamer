@@ -25,7 +25,7 @@ public class TimestampCallable implements Callable<Boolean> {
 	@Override
 	public Boolean call() throws Exception {
 		Boolean result = Soxi.needsUpdate(item.toString(), tags.get("icestreamer-update"));
-		logger.log(Level.INFO, "checking timestamp of {0}, needs update: {1}", new Object[]{item, result});
+		logger.log(Level.FINE, "checking timestamp of {0}, needs update: {1}", new Object[]{item, result});
 		return result;
 	}
 

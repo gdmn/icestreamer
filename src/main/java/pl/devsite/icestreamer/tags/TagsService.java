@@ -86,6 +86,7 @@ public class TagsService {
 	}
 
 	public void clean() {
+		logger.info("cleaning phase 1/6");
 		ItemFactory itemFactory = new ItemFactory();
 		Stream<Entry<Integer, Tags>> notExisting = tagsMap.entrySet()
 				.parallelStream()
@@ -98,14 +99,17 @@ public class TagsService {
 					}
 					return item == null || !item.exists();
 				});
-
+		
+		logger.info("cleaning phase 2/6");
 		notExisting.forEach(e -> {
 			logger.log(Level.INFO, "Removing from tags database {0}", e.getValue());
 			tagsMap.remove(e.getKey());
 		});
-
+		
+		logger.info("cleaning phase 3/6");
 		db.commit();
-
+		
+		logger.info("cleaning phase 4/6");
 		Stream<Entry<Integer, Tags>> updateNeeded = tagsMap.entrySet()
 				.parallelStream()
 				.filter(e -> e.getValue().get("path") != null)
@@ -120,6 +124,7 @@ public class TagsService {
 					return needsUpdate;
 				});
 
+		logger.info("cleaning phase 5/6");
 		updateNeeded.forEach(e -> {
 			Tags tags = e.getValue();
 			Item item = itemFactory.create(tags.get("path"));
@@ -132,7 +137,10 @@ public class TagsService {
 			}
 		});
 
+		logger.info("cleaning phase 6/6");
 		db.commit();
+		
+		logger.info("cleaning finished");
 	}
 
 	public void clear() {
