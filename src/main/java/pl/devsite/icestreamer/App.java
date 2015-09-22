@@ -266,6 +266,7 @@ public class App {
 		}
 
 		TagsService.initialize(defaultDatabase);
+		logger.log(Level.INFO, "Tags database ''{0}'' opened, {1} items found", new Object[]{defaultDatabase, allItems.size()});
 	}
 
 	boolean isIcy(Request request) {
