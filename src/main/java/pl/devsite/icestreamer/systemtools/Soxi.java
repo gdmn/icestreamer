@@ -4,10 +4,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -63,6 +61,8 @@ class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<Stri
 			Soxi soxi = Soxi.getInstance();
 			soxi.setAdditionalOptions("-D");//seconds
 			String seconds = soxi.query(fileName, soxi);
+			String length = null;
+			
 			if (seconds == null) {
 				return null;
 			}
@@ -77,13 +77,15 @@ class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<Stri
 					int secondsInt = Integer.parseInt(seconds);
 					int m = secondsInt / 60;
 					int s = secondsInt % 60;
-					seconds = m + ":" + (s<10 ? "0" + s : s);
+					length = m + ":" + (s<10 ? "0" + s : s);
 				} catch (NumberFormatException e) {}
 			}
 
 			soxi = Soxi.getInstance();
 			soxi.setAdditionalOptions("-a");//tags
-			return ("Length=" + seconds + '\n' + soxi.query(fileName, soxi)).trim();
+			return ("Length=" + length + '\n'
+					+ "Seconds=" + seconds + '\n' 
+					+ soxi.query(fileName, soxi)).trim();
 		} catch (InstantiationException ex) {
 			logger.log(Level.SEVERE, "", ex);
 			return null;

@@ -1,6 +1,5 @@
 package pl.devsite.icestreamer.tags;
 
-import com.google.gson.annotations.SerializedName;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -17,7 +16,13 @@ import org.mapdb.Serializer;
  * @author dmn
  */
 public class Tags extends HashMap<String, String> implements Comparable<Tags> {
+
 	public final static String PATH = "path";
+	public final static String LENGTH = "length";
+	public final static String SECONDS = "seconds";
+	public final static String ARTIST = "artist";
+	public final static String TITLE = "title";
+	public final static String HHASHCODE = "hashcode";
 
 	public Tags(Map<? extends String, ? extends String> m) {
 		super(m);
@@ -78,7 +83,7 @@ public class Tags extends HashMap<String, String> implements Comparable<Tags> {
 //				System.out.println("> " + v);
 				result.put(k, v);
 			}
-			
+
 			return result;
 		}
 
@@ -96,8 +101,32 @@ public class Tags extends HashMap<String, String> implements Comparable<Tags> {
 		}
 		return false;
 	}
-	
+
+	private String getArtist() {
+		return get(ARTIST);
+	}
+
+	private String getTitle() {
+		return get(TITLE);
+	}
+
 	public String getPath() {
 		return get(PATH);
+	}
+
+	public String getLength() {
+		return get(LENGTH);
+	}
+	
+	public String getHhashcode() {
+		return get(HHASHCODE);
+	}
+	
+	public String getSeconds() {
+		return get(SECONDS);
+	}
+
+	public String getArtistAndTitle() {
+		return getArtist() + " - " + getTitle();
 	}
 }

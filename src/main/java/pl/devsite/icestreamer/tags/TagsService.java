@@ -73,7 +73,7 @@ public class TagsService {
 				Future<Tags> futureTags = SoxiExecutor.getInstance().submit(item);
 
 				tags = futureTags.get();
-				tags.put("hashcode", "h" + Integer.toHexString(item.hashCode()));
+				tags.put(Tags.HHASHCODE, "h" + Integer.toHexString(item.hashCode()));
 				tagsMap.put(item.hashCode(), tags);
 				db.commit();
 				return tags;
@@ -135,7 +135,7 @@ public class TagsService {
 			Future<Tags> futureTags = SoxiExecutor.getInstance().submit(item);
 			try {
 				tags = futureTags.get();
-				tags.put("hashcode", "h" + Integer.toHexString(item.hashCode()));
+				tags.put(Tags.HHASHCODE, "h" + Integer.toHexString(item.hashCode()));
 				tagsMap.put(item.hashCode(), tags);
 			} catch (InterruptedException | ExecutionException ex) {
 			}

@@ -39,6 +39,9 @@ public class Items {
 
 	public Item get(Integer key) {
 		Tags tags = TagsService.getInstance().get(key);
+		if (tags == null) {
+			return null;
+		}
 		return factory.create(tags.getPath());
 	}
 
