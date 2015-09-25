@@ -18,6 +18,7 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import pl.devsite.icestreamer.item.Items;
 import pl.devsite.icestreamer.tags.Tags;
 import spark.Request;
@@ -147,13 +148,13 @@ public class App {
 			String host = queriedHost(request);
 
 			String body = request.body();
-			Collection<Item> result = serve(body);
-			logger.log(Level.INFO, "Size {0}", TagsService.getInstance().size());
-			return renderItemStrings(result, host);
+			List<Tags> tagsList = stringsToTagsCollection(body);
+			logger.log(Level.INFO, "New size: {0}", TagsService.getInstance().size());
+			return render(response, request.queryParams("format"), tagsList, host);
 		});
 	}
 
-	List<Tags> filterAndSort(Collection<Tags> input, String regex) {
+	private List<Tags> filterAndSort(Collection<Tags> input, String regex) {
 		List<Tags> tagsList;
 		tagsList = new ArrayList<>(input);
 		if (regex != null && !regex.isEmpty()) {
@@ -170,12 +171,18 @@ public class App {
 		return tagsList;
 	}
 
-	Collection<Item> serve(String lines) {
+	private List<Item> stringsToItemCollection(String lines) {
 		Items items = new Items();
 		return items.feed(parseLines(lines));
 	}
 
-	void init(String[] args) throws IOException {
+	private List<Tags> stringsToTagsCollection(String lines) {
+		List<Item> itemCollection = stringsToItemCollection(lines);
+		List<Tags> tagsCollection = itemCollection.parallelStream().map(item -> TagsService.getInstance().getTags(item)).collect(Collectors.toList());
+		return tagsCollection;
+	}
+
+	private void init(String[] args) throws IOException {
 		int i = 0;
 		defaultPort = 0;
 		boolean isThereServerAlready = false;
@@ -219,7 +226,7 @@ public class App {
 					String line = sc.nextLine();
 					logger.log(Level.FINE, "System.in: {0}", line);
 					try {
-						System.out.print(renderListold(serve(line), defaultName + ":" + defaultPort));
+						System.out.print(renderTagsRaw(stringsToTagsCollection(line), defaultName + ":" + defaultPort));
 					} catch (Exception e) {
 						logger.log(Level.WARNING, null, e);
 					}
@@ -277,7 +284,7 @@ public class App {
 		return false;
 	}
 
-	String queriedUserAgent(Request request) {
+	private String queriedUserAgent(Request request) {
 		for (String h : request.headers()) {
 			if ("User-Agent".equalsIgnoreCase(h)) {
 				return request.headers(h);
@@ -286,7 +293,7 @@ public class App {
 		return null;
 	}
 
-	String queriedHost(Request request) {
+	private String queriedHost(Request request) {
 		Object queryParamPort = request.queryParams("port");
 		Object queryParamName = request.queryParams("name");
 
@@ -304,12 +311,12 @@ public class App {
 		return defaultName + ":" + defaultPort;
 	}
 
-	String queriedSearch(Request request) {
+	private String queriedSearch(Request request) {
 		Object querySearch = request.queryParams("s");
 		return querySearch != null ? String.valueOf(querySearch) : null;
 	}
 
-	Integer parseHashcode(String hash) {
+	private Integer parseHashcode(String hash) {
 		if (hash.startsWith("h") && hash.length() > 1) {
 			hash = hash.substring(1);
 			return Integer.parseUnsignedInt(hash, 16);
@@ -317,7 +324,7 @@ public class App {
 		return null;
 	}
 
-	String[] parseLines(String body) {
+	private String[] parseLines(String body) {
 		String[] bodyLines;
 		if (body.indexOf(0) >= 0) {
 			bodyLines = body.split("\0");
@@ -385,28 +392,20 @@ public class App {
 		return result.toString();
 	}
 
-	String render(Response response, String format, Collection<Tags> list, String host) {
+	private String render(Response response, String format, Collection<Tags> list, String host) {
 		if ("m3u".equalsIgnoreCase(format)) {
 			response.type("audio/x-mpegurl");
-			return renderM3U(list, host);
+			return renderTagsM3u(list, host);
 		} else if ("names".equalsIgnoreCase(format)) {
 			response.type("text/plain");
-			return renderTagsStrings(list, host);
+			return renderTagsPaths(list, host);
 		} else {
 			response.type("text/plain");
-			return renderList(list, host);
+			return renderTagsRaw(list, host);
 		}
 	}
 
-	private String renderItemStrings(Collection<Item> list, String host) {
-		StringBuilder result = new StringBuilder();
-		list.stream().forEach((i) -> {
-			result.append(i.toString()).append("\n");
-		});
-		return result.toString();
-	}
-
-	private String renderTagsStrings(Collection<Tags> list, String host) {
+	private String renderTagsPaths(Collection<Tags> list, String host) {
 		StringBuilder result = new StringBuilder();
 		list.stream().forEach((i) -> {
 			result.append(i.getPath()).append("\n");
@@ -414,16 +413,7 @@ public class App {
 		return result.toString();
 	}
 
-	private String renderListold(Collection<Item> list, String host) {
-		StringBuilder result = new StringBuilder();
-		list.stream().forEach((i) -> {
-			result.append("http://").append(host).append("/stream/");
-			result.append("h").append(Integer.toHexString(i.hashCode())).append("\n");
-		});
-		return result.toString();
-	}
-
-	private String renderList(Collection<Tags> list, String host) {
+	private String renderTagsRaw(Collection<Tags> list, String host) {
 		StringBuilder result = new StringBuilder();
 		list.stream().forEach((i) -> {
 			result.append("http://").append(host).append("/stream/");
@@ -432,22 +422,11 @@ public class App {
 		return result.toString();
 	}
 
-	private String renderM3Uold(Collection<Item> list, String host) {
+	private String renderTagsM3u(Collection<Tags> list, String host) {
 		StringBuilder result = new StringBuilder();
 		result.append("#EXTM3U").append("\n");
 		list.stream().forEach((i) -> {
-			result.append("#EXTINF:").append("-1").append(", ").append(i.toString()).append("\n");
-			result.append("http://").append(host).append("/stream/");
-			result.append("h").append(Integer.toHexString(i.hashCode())).append("\n");
-		});
-		return result.toString();
-	}
 
-	private String renderM3U(Collection<Tags> list, String host) {
-		StringBuilder result = new StringBuilder();
-		result.append("#EXTM3U").append("\n");
-		list.stream().forEach((i) -> {
-			
 			result.append("#EXTINF:").append(i.getSeconds()).append(", ").append(i.getArtistAndTitle()).append("\n");
 			result.append("http://").append(host).append("/stream/");
 			result.append(i.getHhashcode()).append("\n");
