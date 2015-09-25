@@ -43,17 +43,21 @@ public class TagsService {
 	}
 
 	private TagsService(String defaultDatabase) {
-		db = DBMaker.fileDB(new File(defaultDatabase))
-				.transactionDisable()
-				.asyncWriteEnable()
-				.executorEnable()
-				.closeOnJvmShutdown()
-				.make();
+		try {
+			db = DBMaker.fileDB(new File(defaultDatabase))
+					.transactionDisable()
+					.asyncWriteEnable()
+					.executorEnable()
+					.closeOnJvmShutdown()
+					.make();
 
-		tagsMap = db.hashMapCreate("tags")
-				.keySerializer(Serializer.INTEGER)
-				.valueSerializer(new Tags.CustomSerializer())
-				.makeOrGet();
+			tagsMap = db.hashMapCreate("tags")
+					.keySerializer(Serializer.INTEGER)
+					.valueSerializer(new Tags.CustomSerializer())
+					.makeOrGet();
+		} catch (Exception e) {
+			throw new RuntimeException("Initialization problem", e);
+		}
 	}
 
 	public Tags getTags(Item item) {
@@ -90,10 +94,10 @@ public class TagsService {
 		ItemFactory itemFactory = new ItemFactory();
 		Stream<Entry<Integer, Tags>> notExisting = tagsMap.entrySet()
 				.parallelStream()
-				.filter(e -> e.getValue().get("path") != null)
+				.filter(e -> e.getValue().getPath() != null)
 				.filter(e -> {
 					Tags tags = e.getValue();
-					Item item = itemFactory.create(tags.get("path"));
+					Item item = itemFactory.create(tags.getPath());
 					if (item == null) {
 						logger.log(Level.WARNING, "Item is null for {0}", e.getValue());
 					}
@@ -112,10 +116,10 @@ public class TagsService {
 		logger.info("cleaning phase 4/6");
 		Stream<Entry<Integer, Tags>> updateNeeded = tagsMap.entrySet()
 				.parallelStream()
-				.filter(e -> e.getValue().get("path") != null)
+				.filter(e -> e.getValue().getPath() != null)
 				.filter(e -> {
 					Tags tags = e.getValue();
-					Item item = itemFactory.create(tags.get("path"));
+					Item item = itemFactory.create(tags.getPath());
 					boolean needsUpdate = false;
 					try {
 						needsUpdate = SoxiTimestampCheckExecutor.getInstance().submit(item, tags).get();
@@ -127,7 +131,7 @@ public class TagsService {
 		logger.info("cleaning phase 5/6");
 		updateNeeded.forEach(e -> {
 			Tags tags = e.getValue();
-			Item item = itemFactory.create(tags.get("path"));
+			Item item = itemFactory.create(tags.getPath());
 			Future<Tags> futureTags = SoxiExecutor.getInstance().submit(item);
 			try {
 				tags = futureTags.get();

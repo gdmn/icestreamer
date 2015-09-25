@@ -39,7 +39,7 @@ public class Items {
 
 	public Item get(Integer key) {
 		Tags tags = TagsService.getInstance().get(key);
-		return factory.create(tags.get("path"));
+		return factory.create(tags.getPath());
 	}
 
 	protected void refreshTags(Item i) {

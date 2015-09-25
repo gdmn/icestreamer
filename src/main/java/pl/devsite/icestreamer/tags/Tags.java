@@ -17,6 +17,7 @@ import org.mapdb.Serializer;
  * @author dmn
  */
 public class Tags extends HashMap<String, String> implements Comparable<Tags> {
+	public final static String PATH = "path";
 
 	public Tags(Map<? extends String, ? extends String> m) {
 		super(m);
@@ -44,7 +45,7 @@ public class Tags extends HashMap<String, String> implements Comparable<Tags> {
 		}
 		if (o instanceof Tags) {
 			Tags other = (Tags) o;
-			return this.get("path").compareTo(other.get("path"));
+			return this.get(PATH).compareTo(other.get(PATH));
 		}
 		return this.toString().compareTo(o.toString());
 	}
@@ -88,11 +89,15 @@ public class Tags extends HashMap<String, String> implements Comparable<Tags> {
 	}
 
 	public boolean matches(Pattern pattern) {
-		String path = get("path");
+		String path = get(PATH);
 		if (path != null) {
 			Matcher m = pattern.matcher(path);
 			return m.matches();
 		}
 		return false;
+	}
+	
+	public String getPath() {
+		return get(PATH);
 	}
 }

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import pl.devsite.icestreamer.tags.Tags;
 import pl.devsite.system.SystemProcessCallback;
 import pl.devsite.system.SystemProcessInterface;
 import pl.devsite.system.SystemProcessWrapper;
@@ -34,7 +35,7 @@ class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<Stri
 	public static Map<String, String> getTags(String fileName) {
 		String soxiResult = Soxi.query(fileName);
 		if (soxiResult == null) {
-			return Collections.singletonMap("path", fileName);
+			return Collections.singletonMap(Tags.PATH, fileName);
 		}
 
 		Stream<String> a = Arrays.asList(soxiResult.split("\n")).stream()
@@ -43,7 +44,7 @@ class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<Stri
 		Stream<String[]> b = a.map(line -> new String[]{line.substring(0, line.indexOf('=')).toLowerCase(), line.substring(line.indexOf('=') + 1)});
 		HashMap<String, String> result = b.collect(HashMap::new, (m, v) -> m.put(v[0], v[1]), HashMap::putAll);
 
-		result.put("path", fileName);
+		result.put(Tags.PATH, fileName);
 		result.put("icestreamer-update", Long.toString(new File(fileName).lastModified()));
 		return result;
 	}

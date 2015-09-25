@@ -16,7 +16,7 @@ public class ItemFactory {
 	);
 	
 	public Item create(Tags tags) {
-		return create(tags.get("path"));
+		return create(tags.getPath());
 	}
 
 	public Item create(String something) {		
