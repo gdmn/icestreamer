@@ -18,8 +18,6 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import pl.devsite.icestreamer.item.ItemFactory;
 import pl.devsite.icestreamer.item.Items;
 import pl.devsite.icestreamer.tags.Tags;
 import spark.Request;
@@ -139,9 +137,9 @@ public class App {
 				result.put("message", "OK");
 				return new JsonTransformer().render(result);
 			} else {
-				ItemFactory factory = new ItemFactory();
-				List<Item> itemsList = items.parallelStream().map(tags -> factory.create(tags)).collect(Collectors.toList());
-				return render(response, request.queryParams("format"), itemsList, host);
+				//ItemFactory factory = new ItemFactory();
+				//List<Item> itemsList = items.parallelStream().map(tags -> factory.create(tags)).collect(Collectors.toList());
+				return render(response, request.queryParams("format"), items, host);
 			}
 		});
 
@@ -151,7 +149,7 @@ public class App {
 			String body = request.body();
 			Collection<Item> result = serve(body);
 			logger.log(Level.INFO, "Size {0}", TagsService.getInstance().size());
-			return render(response, request.queryParams("format"), result, host);
+			return renderItemStrings(result, host);
 		});
 	}
 
@@ -221,7 +219,7 @@ public class App {
 					String line = sc.nextLine();
 					logger.log(Level.FINE, "System.in: {0}", line);
 					try {
-						System.out.print(renderList(serve(line), defaultName + ":" + defaultPort));
+						System.out.print(renderListold(serve(line), defaultName + ":" + defaultPort));
 					} catch (Exception e) {
 						logger.log(Level.WARNING, null, e);
 					}
@@ -387,13 +385,13 @@ public class App {
 		return result.toString();
 	}
 
-	String render(Response response, String format, Collection<Item> list, String host) {
+	String render(Response response, String format, Collection<Tags> list, String host) {
 		if ("m3u".equalsIgnoreCase(format)) {
 			response.type("audio/x-mpegurl");
 			return renderM3U(list, host);
 		} else if ("names".equalsIgnoreCase(format)) {
 			response.type("text/plain");
-			return renderItemStrings(list, host);
+			return renderTagsStrings(list, host);
 		} else {
 			response.type("text/plain");
 			return renderList(list, host);
@@ -408,7 +406,15 @@ public class App {
 		return result.toString();
 	}
 
-	private String renderList(Collection<Item> list, String host) {
+	private String renderTagsStrings(Collection<Tags> list, String host) {
+		StringBuilder result = new StringBuilder();
+		list.stream().forEach((i) -> {
+			result.append(i.getPath()).append("\n");
+		});
+		return result.toString();
+	}
+
+	private String renderListold(Collection<Item> list, String host) {
 		StringBuilder result = new StringBuilder();
 		list.stream().forEach((i) -> {
 			result.append("http://").append(host).append("/stream/");
@@ -417,13 +423,34 @@ public class App {
 		return result.toString();
 	}
 
-	private String renderM3U(Collection<Item> list, String host) {
+	private String renderList(Collection<Tags> list, String host) {
+		StringBuilder result = new StringBuilder();
+		list.stream().forEach((i) -> {
+			result.append("http://").append(host).append("/stream/");
+			result.append(i.getHhashcode()).append("\n");
+		});
+		return result.toString();
+	}
+
+	private String renderM3Uold(Collection<Item> list, String host) {
 		StringBuilder result = new StringBuilder();
 		result.append("#EXTM3U").append("\n");
 		list.stream().forEach((i) -> {
 			result.append("#EXTINF:").append("-1").append(", ").append(i.toString()).append("\n");
 			result.append("http://").append(host).append("/stream/");
 			result.append("h").append(Integer.toHexString(i.hashCode())).append("\n");
+		});
+		return result.toString();
+	}
+
+	private String renderM3U(Collection<Tags> list, String host) {
+		StringBuilder result = new StringBuilder();
+		result.append("#EXTM3U").append("\n");
+		list.stream().forEach((i) -> {
+			
+			result.append("#EXTINF:").append(i.getSeconds()).append(", ").append(i.getArtistAndTitle()).append("\n");
+			result.append("http://").append(host).append("/stream/");
+			result.append(i.getHhashcode()).append("\n");
 		});
 		return result.toString();
 	}
