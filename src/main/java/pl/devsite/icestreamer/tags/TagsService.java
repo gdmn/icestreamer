@@ -2,11 +2,16 @@ package pl.devsite.icestreamer.tags;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -24,7 +29,8 @@ import pl.devsite.icestreamer.systemtools.SoxiTimestampCheckExecutor;
 public class TagsService {
 
 	private final HTreeMap<Integer, Tags> tagsMap;
-	private final DB db;
+	private final HTreeMap<String, List<Tags>> searchCache;
+	private final DB db, dbMemory;
 	private static TagsService instance;
 	private static final Logger logger = Logger.getLogger(TagsService.class.getName());
 
@@ -55,6 +61,17 @@ public class TagsService {
 					.keySerializer(Serializer.INTEGER)
 					.valueSerializer(new Tags.CustomSerializer())
 					.makeOrGet();
+
+			dbMemory = DBMaker
+					.memoryDB()
+					.make();
+
+			searchCache = dbMemory
+					.hashMapCreate("searchCache")
+					.expireAfterAccess(10, TimeUnit.MINUTES)
+					.expireAfterWrite(10, TimeUnit.MINUTES)
+					.executorEnable()
+					.make();
 		} catch (Exception e) {
 			throw new RuntimeException("Initialization problem", e);
 		}
@@ -94,7 +111,7 @@ public class TagsService {
 	}
 
 	public void clean() {
-		logger.info("cleaning phase 1/6");
+		logger.info("cleaning phase 1/7");
 		ItemFactory itemFactory = new ItemFactory();
 		Stream<Entry<Integer, Tags>> notExisting = tagsMap.entrySet()
 				.parallelStream()
@@ -107,17 +124,17 @@ public class TagsService {
 					}
 					return item == null || !item.exists();
 				});
-		
-		logger.info("cleaning phase 2/6");
+
+		logger.info("cleaning phase 2/7");
 		notExisting.forEach(e -> {
 			logger.log(Level.INFO, "Removing from tags database {0}", e.getValue());
 			tagsMap.remove(e.getKey());
 		});
-		
-		logger.info("cleaning phase 3/6");
+
+		logger.info("cleaning phase 3/7");
 		db.commit();
-		
-		logger.info("cleaning phase 4/6");
+
+		logger.info("cleaning phase 4/7");
 		Stream<Entry<Integer, Tags>> updateNeeded = tagsMap.entrySet()
 				.parallelStream()
 				.filter(e -> e.getValue().getPath() != null)
@@ -132,7 +149,7 @@ public class TagsService {
 					return needsUpdate;
 				});
 
-		logger.info("cleaning phase 5/6");
+		logger.info("cleaning phase 5/7");
 		updateNeeded.forEach(e -> {
 			Tags tags = e.getValue();
 			Item item = itemFactory.create(tags.getPath());
@@ -145,9 +162,18 @@ public class TagsService {
 			}
 		});
 
-		logger.info("cleaning phase 6/6");
+		logger.info("cleaning phase 6/7");
 		db.commit();
+		db.compact();
+		db.commit();
+		db.getEngine().clearCache();
 		
+		logger.info("cleaning phase 7/7");		
+		searchCache.clear();
+		dbMemory.compact();
+		dbMemory.commit();
+		dbMemory.getEngine().clearCache();
+
 		logger.info("cleaning finished");
 	}
 
@@ -164,4 +190,30 @@ public class TagsService {
 		return tagsMap.size();
 	}
 
+	public List<Tags> filterAndSort(String regex) {
+		if (regex == null || regex.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		List<Tags> fromCache = searchCache.get(regex);
+		if (fromCache == null) {
+			logger.log(Level.FINE, "not found in search cache {0}", regex);
+
+			Stream<Tags> input = this.stream();
+			Pattern pattern = Pattern.compile(regex);
+
+			List<Tags> tagsList = input
+					.filter(tags -> {
+						return tags.matches(pattern);
+					})
+					.sorted()
+					.collect(Collectors.toList());
+
+			searchCache.put(regex, tagsList);
+			return tagsList;
+		} else {
+			logger.log(Level.FINE, "found in search cache {0}", regex);
+			return fromCache;
+		}
+	}
 }

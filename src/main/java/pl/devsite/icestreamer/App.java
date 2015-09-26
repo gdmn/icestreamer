@@ -7,19 +7,14 @@ import pl.devsite.icestreamer.item.Item;
 import pl.devsite.icestreamer.tags.TagsService;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import pl.devsite.icestreamer.item.Items;
 import pl.devsite.icestreamer.tags.Tags;
 import spark.Request;
@@ -129,7 +124,7 @@ public class App {
 				}
 			}
 			long t1 = System.currentTimeMillis();
-			List<Tags> items = filterAndSort(filter);
+			List<Tags> items = TagsService.getInstance().filterAndSort(filter);
 			long t2 = System.currentTimeMillis();
 
 			if ("application/json".equals(request.headers("Accept"))) {
@@ -154,24 +149,6 @@ public class App {
 			logger.log(Level.INFO, "New size: {0}", TagsService.getInstance().size());
 			return render(response, request.queryParams("format"), tagsList, host);
 		});
-	}
-
-	private List<Tags> filterAndSort(String regex) {
-		if (regex == null || regex.isEmpty()) {
-			return Collections.emptyList();
-		}
-
-		Stream<Tags> input = TagsService.getInstance().stream();
-		Pattern pattern = Pattern.compile(regex);
-
-		List<Tags> tagsList = input
-				.filter(tags -> {
-					return tags.matches(pattern);
-				})
-				.sorted()
-				.collect(Collectors.toList());
-
-		return tagsList;
 	}
 
 	private List<Item> stringsToItemCollection(String lines) {
