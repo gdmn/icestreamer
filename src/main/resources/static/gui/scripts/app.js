@@ -83,6 +83,7 @@
 	var FoundCounterModel = Backbone.Model.extend({
 		defaults: {
 			count: 0,
+			queryTime: 0,
 			visible: false,
 			searching: false
 		}
@@ -285,12 +286,21 @@
 			this.clearItems();
 			var that = this;
 			this.ajaxLoadList({format: 'names', s: filterInput.val()}, function (data) {
-				that.found.model.set({count: data.total});
+				console.log('queryTime: '+data['icestreamer-query-time']);
+				var t0 = performance.now();
+				that.found.model.set({count: data.total, queryTime: data['icestreamer-query-time']});
 
 				that.collection.setData(data);
+				var t1 = performance.now();
+				console.log('setData took: '+(t1-t0));
+				
+				t0 = performance.now();				
 				while (that.infinityScrollHandler()) {
 					_.noop();
 				}
+				t1 = performance.now();
+				console.log('infinityScrollHandler took: '+(t1-t0));
+				
 				$('button#renderAllButton').show();
 			});
 			this.focusOnInput();

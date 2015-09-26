@@ -89,6 +89,10 @@ public class TagsService {
 		return tagsMap.values();
 	}
 
+	public Stream<Tags> stream() {
+		return tagsMap.values().parallelStream();
+	}
+
 	public void clean() {
 		logger.info("cleaning phase 1/6");
 		ItemFactory itemFactory = new ItemFactory();

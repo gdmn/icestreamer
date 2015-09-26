@@ -71,7 +71,8 @@
 			<% if (searching) { %>
 			Searching...
 			<% } else { %>				
-			Found <b><%= count %></b> <%= count == 1 ? 'item' : 'items' %>.
+			Found <b><%= count %></b> <%= count == 1 ? 'item' : 'items' %>
+			in <%= queryTime %> ms.
 			<% } %>
 			<% } else { %>
 			<% } %>
