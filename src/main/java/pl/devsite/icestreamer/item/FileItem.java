@@ -72,14 +72,11 @@ public class FileItem implements Item {
 
 	@Override
 	public String getName() {
-		return fileName();
+		return TagsService.getInstance().getTags(this).getArtistAndTitle();
 	}
 
-	private String fileName() {
-		if (canonicalPath != null) {
-			return canonicalPath.substring(canonicalPath.lastIndexOf(File.separator) + 1);
-		}
-		return null;
+	public String getPath() {
+		return canonicalPath;
 	}
 
 	private String dirName() {

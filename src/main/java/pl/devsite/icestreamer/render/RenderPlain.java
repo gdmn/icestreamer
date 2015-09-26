@@ -1,5 +1,6 @@
 package pl.devsite.icestreamer.render;
 
+import java.io.File;
 import pl.devsite.icestreamer.item.Item;
 import pl.devsite.icestreamer.item.FileItem;
 import java.io.IOException;
@@ -38,13 +39,15 @@ public class RenderPlain implements Render {
 		response.type("application/octet-stream");
 		if (item instanceof FileItem) {
 			FileItem fileItem = (FileItem) item;
-			if (fileItem.getName().toLowerCase().endsWith(".ogg")) {
+			String filePath = fileItem.getPath();
+			if (filePath.toLowerCase().endsWith(".ogg")) {
 				response.type("application/ogg");
 			}
-			if (fileItem.getName().toLowerCase().endsWith(".mp3")) {
+			if (filePath.toLowerCase().endsWith(".mp3")) {
 				response.type("audio/mpeg");
 			}
-			response.header("Content-Disposition", "inline; filename=\""+fileItem.getName()+"\"");
+			String name = filePath.substring(filePath.lastIndexOf(File.separator) + 1);
+			response.header("Content-Disposition", "inline; filename=\"" + name + "\"");
 		}
 		try (InputStream in = item.getInputStream(); OutputStream out = response.raw().getOutputStream()) {
 			pump(in, out);
