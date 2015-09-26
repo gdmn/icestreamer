@@ -64,6 +64,7 @@ public class TagsService {
 
 			dbMemory = DBMaker
 					.memoryDB()
+					.transactionDisable()
 					.make();
 
 			searchCache = dbMemory
