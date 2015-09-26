@@ -190,6 +190,10 @@ public class TagsService {
 	public int size() {
 		return tagsMap.size();
 	}
+	
+	public int searchCacheSize() {
+		return searchCache.size();
+	}
 
 	public List<Tags> filterAndSort(String regex) {
 		if (regex == null || regex.isEmpty()) {

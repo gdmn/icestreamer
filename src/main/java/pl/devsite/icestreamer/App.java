@@ -6,6 +6,7 @@ import pl.devsite.icestreamer.render.JsonTransformer;
 import pl.devsite.icestreamer.item.Item;
 import pl.devsite.icestreamer.tags.TagsService;
 import java.io.IOException;
+import java.lang.management.MemoryUsage;
 import java.net.ServerSocket;
 import java.util.Collection;
 import java.util.HashMap;
@@ -364,10 +365,23 @@ public class App {
 
 	private String status(Request request, Response response) {
 		StringBuilder result = new StringBuilder();
+
+		int mb = 1024*1024;
+		Runtime runtime = Runtime.getRuntime();
+
 		result.append("Items: ").append(allItems.size()).append("\n")
 				.append("IP: ").append(request.ip()).append("\n")
 				.append("Host: ").append(request.host()).append("\n")
-				.append("Port: ").append(request.port()).append("\n");
+				.append("Port: ").append(request.port()).append("\n")
+				.append("\n")
+				.append("Search query cache: ").append(TagsService.getInstance().searchCacheSize()).append("\n")
+				.append("Threads count: ").append(Thread.getAllStackTraces().size()).append("\n")
+				.append("Used memory: ").append((runtime.totalMemory() - runtime.freeMemory()) / mb).append("MB \n")
+				.append("Free memory: ").append(runtime.freeMemory() / mb).append("MB \n")
+				.append("Total memory: ").append(runtime.totalMemory() / mb).append("MB \n")
+				.append("Max memory: ").append(runtime.maxMemory() / mb).append("MB \n")
+				
+				;
 		result.append("\n");
 		return result.toString();
 	}
