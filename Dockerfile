@@ -7,5 +7,6 @@ RUN mvn package
 FROM gcr.io/distroless/java:11
 COPY --from=build-env /app/target/icestreamer-1.0-SNAPSHOT.jar /app/
 WORKDIR /app
+EXPOSE 6680
 CMD ["icestreamer-1.0-SNAPSHOT.jar"]
 
