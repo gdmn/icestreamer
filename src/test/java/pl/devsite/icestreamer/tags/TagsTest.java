@@ -39,15 +39,13 @@ public class TagsTest {
 	@Before
 	public void setUp() {
 		db = DBMaker.memoryDB()
-				.transactionDisable()
-				.asyncWriteEnable()
 //				.executorEnable()
 				.make();
 
-		tagsMap = db.hashMapCreate("tags")
+		tagsMap = db.hashMap("tags")
 				.keySerializer(Serializer.INTEGER)
 				.valueSerializer(new Tags.CustomSerializer())
-				.makeOrGet();
+				.create();
 	}
 
 	@After

@@ -1,0 +1,13 @@
+*~
+*.class
+*.jar
+*.swp
+*conflicted copy*
+target/
+.idea/
+nbactions.xml
+*.bak
+*.iml
+/dependency-reduced-pom.xml
+/nb-configuration.xml
+/icestreamer.db

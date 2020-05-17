@@ -9,7 +9,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.jetbrains.annotations.NotNull;
+import org.mapdb.DataInput2;
+import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
+import org.mapdb.serializer.GroupSerializer;
 
 /**
  *
@@ -55,10 +60,10 @@ public class Tags extends HashMap<String, String> implements Comparable<Tags> {
 		return this.toString().compareTo(o.toString());
 	}
 
-	public static class CustomSerializer extends Serializer<Tags> implements Serializable {
+	public static class CustomSerializer implements Serializer<Tags> {
 
 		@Override
-		public void serialize(DataOutput out, Tags value) throws IOException {
+		public void serialize(@NotNull DataOutput2 out, @NotNull Tags value) throws IOException {
 			Set<Entry<String, String>> entrySet = value.entrySet();
 
 			out.writeUTF(Integer.toString(entrySet.size()));
@@ -69,17 +74,17 @@ public class Tags extends HashMap<String, String> implements Comparable<Tags> {
 		}
 
 		@Override
-		public Tags deserialize(DataInput in, int available) throws IOException {
+		public Tags deserialize(@NotNull DataInput2 input, int available) throws IOException {
 
 			Tags result = new Tags();
 
-			String countString = in.readUTF();
+			String countString = input.readUTF();
 //			System.out.println("> countString " + countString);
 
 			for (int i = 0; i < Integer.parseInt(countString); i++) {
-				String k = in.readUTF();
+				String k = input.readUTF();
 //				System.out.println("> " + k);
-				String v = in.readUTF();
+				String v = input.readUTF();
 //				System.out.println("> " + v);
 				result.put(k, v);
 			}

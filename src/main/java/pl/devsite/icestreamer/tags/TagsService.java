@@ -29,7 +29,7 @@ import pl.devsite.icestreamer.systemtools.SoxiTimestampCheckExecutor;
 public class TagsService {
 
 	private final HTreeMap<Integer, Tags> tagsMap;
-	private final HTreeMap<String, List<Tags>> searchCache;
+//	private final HTreeMap<String, List<Tags>> searchCache;
 	private final DB db, dbMemory;
 	private static TagsService instance;
 	private static final Logger logger = Logger.getLogger(TagsService.class.getName());
@@ -51,28 +51,29 @@ public class TagsService {
 	private TagsService(String defaultDatabase) {
 		try {
 			db = DBMaker.fileDB(new File(defaultDatabase))
-					.transactionDisable()
-					.asyncWriteEnable()
 					.executorEnable()
+        .transactionEnable()
+					.fileMmapEnableIfSupported()
 					.closeOnJvmShutdown()
 					.make();
 
-			tagsMap = db.hashMapCreate("tags")
+			tagsMap = db.hashMap("tags")
 					.keySerializer(Serializer.INTEGER)
 					.valueSerializer(new Tags.CustomSerializer())
-					.makeOrGet();
+					.createOrOpen();
 
 			dbMemory = DBMaker
 					.memoryDB()
-					.transactionDisable()
 					.make();
 
-			searchCache = dbMemory
-					.hashMapCreate("searchCache")
-					.expireAfterAccess(10, TimeUnit.MINUTES)
-					.expireAfterWrite(10, TimeUnit.MINUTES)
-					.executorEnable()
-					.make();
+//			searchCache = dbMemory
+//					.<String, List<Tags>>hashMap("searchCache")
+//					.expireAfterGet(10, TimeUnit.MINUTES)
+//					.expireAfterCreate(10, TimeUnit.MINUTES)
+//    			    .expireMaxSize(128)
+////					.keySerializer(Serializer.STRING)
+////					.valueSerializer()
+//					.<String, List<Tags>>create();
 		} catch (Exception e) {
 			throw new RuntimeException("Initialization problem", e);
 		}
@@ -165,15 +166,11 @@ public class TagsService {
 
 		logger.info("cleaning phase 6/7");
 		db.commit();
-		db.compact();
 		db.commit();
-		db.getEngine().clearCache();
-		
+
 		logger.info("cleaning phase 7/7");		
-		searchCache.clear();
-		dbMemory.compact();
+//		searchCache.clear();
 		dbMemory.commit();
-		dbMemory.getEngine().clearCache();
 
 		logger.info("cleaning finished");
 	}
@@ -192,7 +189,7 @@ public class TagsService {
 	}
 	
 	public int searchCacheSize() {
-		return searchCache.size();
+		return 0;// searchCache.size();
 	}
 
 	public List<Tags> filterAndSort(String regex) {
@@ -200,7 +197,7 @@ public class TagsService {
 			return Collections.emptyList();
 		}
 
-		List<Tags> fromCache = searchCache.get(regex);
+		List<Tags> fromCache = null; //searchCache.get(regex);
 		if (fromCache == null) {
 			logger.log(Level.FINE, "not found in search cache {0}", regex);
 
@@ -214,7 +211,7 @@ public class TagsService {
 					.sorted()
 					.collect(Collectors.toList());
 
-			searchCache.put(regex, tagsList);
+//			searchCache.put(regex, tagsList);
 			return tagsList;
 		} else {
 			logger.log(Level.FINE, "found in search cache {0}", regex);
