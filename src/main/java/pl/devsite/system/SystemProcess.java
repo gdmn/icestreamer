@@ -1,5 +1,7 @@
 package pl.devsite.system;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,6 +12,7 @@ import java.util.logging.Logger;
  *
  * @author dmn
  */
+@Slf4j
 public class SystemProcess {
 
 	private Process processHandle;
@@ -84,7 +87,7 @@ public class SystemProcess {
 			try {
 				pump(inputStream, outputStream);
 			} catch (IOException ex) {
-				Logger.getLogger(SystemProcess.class.getName()).log(Level.SEVERE, null, ex);
+				log.error("", ex);
 			}
 		});
 		t.start();

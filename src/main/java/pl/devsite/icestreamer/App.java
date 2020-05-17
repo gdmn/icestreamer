@@ -1,5 +1,6 @@
 package pl.devsite.icestreamer;
 
+import lombok.extern.slf4j.Slf4j;
 import pl.devsite.icestreamer.render.RenderPlain;
 import pl.devsite.icestreamer.render.RenderFactory;
 import pl.devsite.icestreamer.render.JsonTransformer;
@@ -13,8 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import pl.devsite.icestreamer.item.Items;
 import pl.devsite.icestreamer.tags.Tags;
@@ -23,9 +22,10 @@ import spark.Response;
 import static spark.Spark.*;
 
 // http://sparkjava.com/documentation.html
+
+@Slf4j
 public class App {
 
-	private static final Logger logger = Logger.getLogger(App.class.getName());
 	Items allItems = new Items();
 	int defaultPort = 0;
 	String defaultName = "localhost";
@@ -147,7 +147,7 @@ public class App {
 
 			String body = request.body();
 			List<Tags> tagsList = stringsToTagsCollection(body);
-			logger.log(Level.INFO, "New size: {0}", TagsService.getInstance().size());
+			log.info("New size: {}", TagsService.getInstance().size());
 			return render(response, request.queryParams("format"), tagsList, host);
 		});
 	}
@@ -195,9 +195,9 @@ public class App {
 		int bytesAvailable = -1;
 		try {
 			bytesAvailable = System.in.available();
-			logger.log(Level.FINE, "System.in.available(): {0}", bytesAvailable);
+			log.debug("System.in.available(): {}", bytesAvailable);
 		} catch (IOException ex) {
-			Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+			log.error("", ex);
 		}
 
 		if (bytesAvailable > -1) {
@@ -205,28 +205,28 @@ public class App {
 				Scanner sc = new Scanner(System.in);
 				while (sc.hasNextLine()) {
 					String line = sc.nextLine();
-					logger.log(Level.FINE, "System.in: {0}", line);
+					log.debug("System.in: {}", line);
 					try {
 						System.out.print(renderTagsRaw(stringsToTagsCollection(line), defaultName + ":" + defaultPort));
 					} catch (Exception e) {
-						logger.log(Level.WARNING, null, e);
+						log.warn(null, e);
 					}
 					System.out.flush();
 				}
-				logger.log(Level.INFO, "System.in exhausted");
+				log.info("System.in exhausted");
 			});
 
 			if (!isThereServerAlready && isPortBusy) {
-				logger.log(Level.SEVERE, "Port is not free but there is not compatibile icestreamer running");
+				log.error("Port is not free but there is not compatibile icestreamer running");
 				System.exit(1);
 			}
 
 			if (!isThereServerAlready) {
-				logger.log(Level.INFO, "Reading System.in in daemon mode");
+				log.info("Reading System.in in daemon mode");
 				t.setDaemon(true);
 				t.start();
 			} else {
-				logger.log(Level.INFO, "Reading System.in and passing data to the server");
+				log.info("Reading System.in and passing data to the server");
 
 				Scanner sc = new Scanner(System.in);
 				StringBuilder lines = new StringBuilder();
@@ -236,15 +236,15 @@ public class App {
 					lines.append(line).append("\n");
 					lineCounter++;
 				}
-				logger.log(Level.INFO, "System.in exhausted, {0} line(s) read", lineCounter);
+				log.info("System.in exhausted, {} line(s) read", lineCounter);
 				SparkTestUtil util = new SparkTestUtil(defaultPort);
 				SparkTestUtil.UrlResponse urlResponse;
 				try {
 					urlResponse = util.doMethod("POST", "/", lines.toString());
-					logger.log(Level.INFO, "Response code {1}, body length {0}", new Object[]{urlResponse.body.length(), urlResponse.status});
+					log.info("Response code {}, body length {}", new Object[]{urlResponse.body.length(), urlResponse.status});
 					System.out.println(urlResponse.body);
 				} catch (Exception ex) {
-					logger.log(Level.SEVERE, null, ex);
+					log.error(null, ex);
 				}
 
 				System.exit(0);
@@ -252,7 +252,7 @@ public class App {
 		}
 
 		TagsService.initialize(defaultDatabase);
-		logger.log(Level.INFO, "Tags database ''{0}'' opened, {1} items found", new Object[]{defaultDatabase, allItems.size()});
+		log.info("Tags database ''{}'' opened, {} items found", new Object[]{defaultDatabase, allItems.size()});
 	}
 
 	boolean isIcy(Request request) {
@@ -339,11 +339,11 @@ public class App {
 		SparkTestUtil.UrlResponse urlResponse;
 		try {
 			urlResponse = util.doMethod("GET", "/version", null);
-			logger.log(Level.FINE, "Response code {1}, body length {0}", new Object[]{urlResponse.body.length(), urlResponse.status});
-			logger.log(Level.INFO, "{0} == {1} = {2}", new Object[]{VERSION, urlResponse.body, VERSION.equals(urlResponse.body)});
+			log.debug("Response code {}, body length {}", new Object[]{urlResponse.body.length(), urlResponse.status});
+			log.info("{} == {} = {}", new Object[]{VERSION, urlResponse.body, VERSION.equals(urlResponse.body)});
 			return VERSION.equals(urlResponse.body);
 		} catch (Exception ex) {
-			logger.log(Level.INFO, "Request failed: {0}", ex.getMessage());
+			log.info("Request failed: {}", ex.getMessage());
 		}
 		return false;
 	}
@@ -354,10 +354,10 @@ public class App {
 			try {
 				ServerSocket socket = new ServerSocket(number);
 				socket.close();
-				logger.log(Level.INFO, "Serving on {0}", socket.getLocalPort());
+				log.info("Serving on {}", socket.getLocalPort());
 				return socket.getLocalPort();
 			} catch (IOException ex) {
-				logger.log(Level.WARNING, "Port {0} seems busy", number);
+				log.warn("Port {} seems busy", number);
 			}
 			number++;
 		} while (true);

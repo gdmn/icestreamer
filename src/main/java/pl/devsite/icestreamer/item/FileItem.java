@@ -1,5 +1,6 @@
 package pl.devsite.icestreamer.item;
 
+import lombok.extern.slf4j.Slf4j;
 import pl.devsite.icestreamer.tags.Tags;
 import pl.devsite.icestreamer.tags.TagsService;
 import com.google.gson.annotations.SerializedName;
@@ -11,8 +12,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
+
+@Slf4j
 public class FileItem implements Item {
 
 	@SerializedName("name")
@@ -52,7 +54,7 @@ public class FileItem implements Item {
 			this.canonicalPath = file.getCanonicalPath();
 			this.hashcodeSerialized = "h" + Integer.toHexString(this.hashCode());
 		} catch (IOException ex) {
-			Logger.getLogger(FileItem.class.getName()).log(Level.SEVERE, null, ex);
+			log.error("", ex);
 		}
 	}
 

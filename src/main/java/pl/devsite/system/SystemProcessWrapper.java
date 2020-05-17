@@ -1,5 +1,7 @@
 package pl.devsite.system;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -11,6 +13,7 @@ import java.util.logging.Logger;
  *
  * @author dmn
  */
+@Slf4j
 public class SystemProcessWrapper extends SystemProcess {
 
 	public static final String ERR_OUT = "err";
@@ -125,7 +128,7 @@ public class SystemProcessWrapper extends SystemProcess {
 					propertyChangeSupport.firePropertyChange(propertyName, null, line);
 				} while (line != null);
 			} catch (IOException ex) {
-				Logger.getLogger(SystemProcessWrapper.class.getName()).log(Level.SEVERE, null, ex);
+				log.error("", ex);
 			}
 		}
 	}

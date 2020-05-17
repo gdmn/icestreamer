@@ -9,8 +9,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import java.util.stream.Stream;
+
+import lombok.extern.slf4j.Slf4j;
 import pl.devsite.icestreamer.tags.Tags;
 import pl.devsite.system.SystemProcessCallback;
 import pl.devsite.system.SystemProcessInterface;
@@ -20,9 +22,9 @@ import pl.devsite.system.SystemProcessWrapper;
  * Packages: sox and libsox-fmt-all needed!
  * @author dmn
  */
+@Slf4j
 class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<String> {
 
-	private static final Logger logger = Logger.getLogger(Soxi.class.getName());
 	private final String command = "soxi";
 	private SystemProcessWrapper proc;
 	private boolean collected = false;
@@ -87,7 +89,7 @@ class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<Stri
 					+ "Seconds=" + seconds + '\n' 
 					+ soxi.query(fileName, soxi)).trim();
 		} catch (InstantiationException ex) {
-			logger.log(Level.SEVERE, "", ex);
+			log.error("", ex);
 			return null;
 		}
 	}
@@ -147,7 +149,7 @@ class Soxi implements SystemProcessInterface<String>, SystemProcessCallback<Stri
 				proc.kill();
 			}
 		} catch (IOException | InterruptedException ex) {
-			Logger.getLogger(Soxi.class.getName()).log(Level.SEVERE, null, ex);
+			log.error("", ex);
 		}
 	}
 

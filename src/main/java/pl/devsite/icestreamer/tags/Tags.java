@@ -4,7 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -15,6 +17,7 @@ import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
 import org.mapdb.serializer.GroupSerializer;
+import org.mapdb.serializer.GroupSerializerObjectArray;
 
 /**
  *
@@ -95,6 +98,29 @@ public class Tags extends HashMap<String, String> implements Comparable<Tags> {
 		@Override
 		public int fixedSize() {
 			return -1;
+		}
+	}
+
+	public static class TagsListSerializer implements Serializer<List<Tags>> {
+		private CustomSerializer customSerializer = new CustomSerializer();
+
+		@Override
+		public void serialize(@NotNull DataOutput2 out, @NotNull List<Tags> value) throws IOException {
+			out.writeUTF(Integer.toString(value.size()));
+			for (Tags v : value) {
+				customSerializer.serialize(out, v);
+			}
+		}
+
+		@Override
+		public List<Tags> deserialize(@NotNull DataInput2 input, int available) throws IOException {
+			String countString = input.readUTF();
+			int count = Integer.parseInt(countString);
+			List<Tags> result = new ArrayList<>(count);
+			for (int i = 0; i < count; i++) {
+				result.add(customSerializer.deserialize(input, 0));
+			}
+			return result;
 		}
 	}
 

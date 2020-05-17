@@ -1,22 +1,24 @@
 package pl.devsite.icestreamer.render;
 
 import java.io.File;
+
+import lombok.extern.slf4j.Slf4j;
 import pl.devsite.icestreamer.item.Item;
 import pl.devsite.icestreamer.item.FileItem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import spark.Response;
 
 /**
  *
  * @author dmn
  */
+@Slf4j
 public class RenderPlain implements Render {
 
-	private static final Logger logger = Logger.getLogger(RenderPlain.class.getName());
 	private final Item item;
 	private final Response response;
 
@@ -35,7 +37,7 @@ public class RenderPlain implements Render {
 
 	@Override
 	public void send() throws IOException {
-		logger.log(Level.INFO, "Requested {0}", item.toString());
+		log.info("Requested {}", item.toString());
 		response.type("application/octet-stream");
 		if (item instanceof FileItem) {
 			FileItem fileItem = (FileItem) item;
